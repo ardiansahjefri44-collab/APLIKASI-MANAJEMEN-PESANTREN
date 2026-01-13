@@ -1,0 +1,43 @@
+{
+  "short_name": "E-Santri",
+  "name": "E-Santri Pro - Sistem Terpadu",
+  "description": "Sistem Informasi Manajemen Pesantren dan Perizinan Santri",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2942/2942821.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2942/2942821.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/index.html",
+  "start_url": "/index.html",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "shortcuts": [
+    {
+      "name": "Scan Perizinan",
+      "short_name": "Scan",
+      "url": "/index.html#perizinan",
+      "icons": [
+        {
+          "src": "https://cdn-icons-png.flaticon.com/512/2942/2942821.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
