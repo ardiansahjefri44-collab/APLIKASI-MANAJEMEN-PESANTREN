@@ -119,68 +119,182 @@
                 </div>
 
                 <!-- PAGE: DATA SANTRI -->
-                <div id="page-santri" class="page-view hidden space-y-4">
-                    <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                        <div class="flex gap-2">
-                            <button onclick="openModal('modal-santri')" class="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-700 action-admin">
-                                <i class="fas fa-plus mr-2"></i> Tambah Santri
-                            </button>
-                            <button onclick="document.getElementById('import-file').click()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-100 action-admin">
-                                <i class="fas fa-file-import mr-2"></i> Import CSV
-                            </button>
-                            <input type="file" id="import-file" class="hidden" accept=".csv" onchange="importCSV(this)">
-                            <button onclick="exportData('all')" class="bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-100">
-                                <i class="fas fa-file-export mr-2"></i> Export Semua
-                            </button>
-                        </div>
-                        <div id="bulk-actions" class="hidden flex items-center gap-2 bg-orange-50 p-2 rounded-xl border border-orange-100">
-                            <span id="bulk-count" class="text-xs font-bold text-orange-700 px-2">0 Dipilih</span>
-                            <select id="bulk-select" onchange="handleBulkAction(this.value)" class="text-xs border-none bg-transparent font-bold text-orange-800 outline-none">
-                                <option value="">-- Aksi Massal --</option>
-                                <option value="export">Export Filtered</option>
-                                <option value="naik">Naik Kelas</option>
-                                <option value="khidmah">Set Khidmah</option>
-                                <option value="alumni" class="action-admin">Set Alumni</option>
-                            </select>
-                        </div>
-                    </div>
-                    <!-- FILTERS -->
-                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <input type="text" id="f-search" onkeyup="renderTableSantri()" placeholder="Cari Nama/ID..." class="px-4 py-2 border rounded-xl text-sm outline-none col-span-2 md:col-span-1">
-                        <select id="f-asrama" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none"></select>
-                        <select id="f-sekolah" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none">
-                            <option value="">Semua Sekolah</option>
-                            <option value="MI">MI</option>
-                            <option value="MTs">MTs</option>
-                            <option value="MA">MA</option>
-                        </select>
-                        <select id="f-kelas" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none">
-                            <option value="">Semua Kelas</option>
-                        </select>
-                        <select id="f-gender" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none">
-                            <option value="">Semua Gender</option>
-                            <option value="Laki-laki">Laki-laki</option>
-                            <option value="Perempuan">Perempuan</option>
-                        </select>
-                    </div>
-                    <!-- TABLE -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-[10px] uppercase font-bold text-gray-500 tracking-wider">
-                                <tr>
-                                    <th class="px-6 py-4 w-10"><input type="checkbox" id="check-all" onclick="toggleCheckAll(this)"></th>
-                                    <th class="px-6 py-4">ID</th>
-                                    <th class="px-6 py-4">Nama Santri</th>
-                                    <th class="px-6 py-4">Status</th>
-                                    <th class="px-6 py-4">Asrama</th>
-                                    <th class="px-6 py-4">Kelas</th>
-                                    <th class="px-6 py-4 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-santri-body" class="divide-y divide-gray-100 text-sm font-medium"></tbody>
-                        </table>
-                    </div>
-                </div>
+<div id="page-santri" class="page-view hidden space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div class="flex gap-2">
+            <button onclick="openModal('modal-santri')" class="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-700 action-admin">
+                <i class="fas fa-plus mr-2"></i> Tambah Santri
+            </button>
+            <button onclick="document.getElementById('import-file').click()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-100 action-admin">
+                <i class="fas fa-file-import mr-2"></i> Import CSV
+            </button>
+            <input type="file" id="import-file" class="hidden" accept=".csv" onchange="importCSV(this)">
+            <button onclick="exportData('all')" class="bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-100">
+                <i class="fas fa-file-export mr-2"></i> Export Semua
+            </button>
+        </div>
+        <div id="bulk-actions" class="hidden flex items-center gap-2 bg-orange-50 p-2 rounded-xl border border-orange-100">
+            <span id="bulk-count" class="text-xs font-bold text-orange-700 px-2">0 Dipilih</span>
+            <select id="bulk-select" onchange="handleBulkAction(this.value)" class="text-xs border-none bg-transparent font-bold text-orange-800 outline-none">
+                <option value="">-- Aksi Massal --</option>
+                <option value="export">Export Filtered</option>
+                <option value="naik">Naik Kelas</option>
+                <option value="khidmah">Set Khidmah</option>
+                <option value="bertugas">Set Bertugas</option>
+                <option value="alumni" class="action-admin">Set Alumni</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm grid grid-cols-2 md:grid-cols-5 gap-4">
+        <input type="text" id="f-search" onkeyup="renderTableSantri()" placeholder="Cari Nama/ID..." class="px-4 py-2 border rounded-xl text-sm outline-none col-span-2 md:col-span-1">
+        <select id="f-asrama" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none"></select>
+        <select id="f-sekolah" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none">
+            <option value="">Semua Sekolah</option>
+            <option value="MI">MI</option>
+            <option value="MTs">MTs</option>
+            <option value="MA">MA</option>
+        </select>
+        <select id="f-kelas" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none">
+            <option value="">Semua Kelas</option>
+        </select>
+        <select id="f-gender" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none">
+            <option value="">Semua Gender</option>
+            <option value="Laki-laki">Laki-laki</option>
+            <option value="Perempuan">Perempuan</option>
+        </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-gray-50 text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                <tr>
+                    <th class="px-6 py-4 w-10"><input type="checkbox" id="check-all" onclick="toggleCheckAll(this)"></th>
+                    <th class="px-6 py-4">ID</th>
+                    <th class="px-6 py-4">Nama Santri</th>
+                    <th class="px-6 py-4">Status</th>
+                    <th class="px-6 py-4">Asrama</th>
+                    <th class="px-6 py-4">Kelas</th>
+                    <th class="px-6 py-4 text-right">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="table-santri-body" class="divide-y divide-gray-100 text-sm font-medium"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function renderTableSantri() {
+    const tbody = document.getElementById('table-santri-body');
+    const s = document.getElementById('f-search').value.toLowerCase();
+    const a = document.getElementById('f-asrama').value;
+    const sk = document.getElementById('f-sekolah').value;
+    const kl = document.getElementById('f-kelas').value;
+    const gn = document.getElementById('f-gender').value;
+
+    const filtered = db.santri.filter(x => 
+        (x.nama.toLowerCase().includes(s) || x.id.toString().includes(s)) &&
+        (a === "" || x.asrama === a) &&
+        (sk === "" || x.sekolah === sk) &&
+        (kl === "" || x.kelas === kl) &&
+        (gn === "" || x.gender === gn)
+    );
+
+    tbody.innerHTML = filtered.map(x => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4"><input type="checkbox" value="${x.id}" class="row-check" onchange="updateSelected(this)"></td>
+            <td class="px-6 py-4 font-mono text-xs">${x.id}</td>
+            <td class="px-6 py-4">
+                <div>${x.nama}</div>
+                <div class="text-[10px] text-gray-400">${x.gender}</div>
+            </td>
+            <td class="px-6 py-4">
+                <span class="text-[10px] font-bold px-2 py-1 rounded-full ${x.status === 'Santri' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}">
+                    ${x.status}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-xs">${x.asrama}</td>
+            <td class="px-6 py-4 text-xs">${x.sekolah} - Kelas ${x.kelas}</td>
+            <td class="px-6 py-4 text-right">
+                ${x.sync === 'Pending' ? '<span class="status-pending mr-2">PENDING</span>' : ''}
+                <button onclick="editSantri(${x.id})" class="text-blue-500 action-admin mr-2"><i class="fas fa-edit"></i></button>
+                <button onclick="deleteSantri(${x.id})" class="text-red-400 action-admin"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+
+    if(currentUser.role !== 'Admin') document.querySelectorAll('.action-admin').forEach(el => el.classList.add('hidden'));
+}
+
+// --- EDIT SANTRI ---
+function editSantri(id) {
+    const s = db.santri.find(x => x.id == id);
+    if(!s) return alert("Santri tidak ditemukan!");
+    
+    openModal('modal-santri');
+    document.getElementById('s-nama').value = s.nama;
+    document.getElementById('s-gender').value = s.gender;
+    document.getElementById('s-asrama').value = s.asrama;
+    document.getElementById('s-sekolah').value = s.sekolah;
+    updateKelasSelect('s-kelas', s.sekolah);
+    document.getElementById('s-kelas').value = s.kelas;
+    document.getElementById('s-wali').value = s.wali;
+    document.getElementById('s-alamat').value = s.alamat;
+    document.getElementById('s-telp').value = s.telp;
+
+    // Override tombol simpan untuk update
+    const saveBtn = document.querySelector('#modal-santri button.bg-green-600');
+    saveBtn.onclick = function() {
+        s.nama = document.getElementById('s-nama').value;
+        s.gender = document.getElementById('s-gender').value;
+        s.asrama = document.getElementById('s-asrama').value;
+        s.sekolah = document.getElementById('s-sekolah').value;
+        s.kelas = document.getElementById('s-kelas').value;
+        s.wali = document.getElementById('s-wali').value || "-";
+        s.alamat = document.getElementById('s-alamat').value || "-";
+        s.telp = document.getElementById('s-telp').value || "-";
+        s.sync = navigator.onLine ? 'Synced' : 'Pending';
+        
+        saveDB();
+        closeModal('modal-santri');
+        renderTableSantri();
+        renderStats();
+        alert("Data santri berhasil diperbarui!");
+    };
+}
+
+// --- BULK ACTION UPDATE ---
+function handleBulkAction(val) {
+    if(!val || selectedIds.size === 0) return;
+
+    if(val === 'naik') {
+        if(!confirm(`Naikkan kelas untuk ${selectedIds.size} santri?`)) return;
+        db.santri.forEach(s => { if(selectedIds.has(s.id.toString())) processNaikKelas(s); });
+    } else if(val === 'alumni') {
+        if(!confirm(`Set ${selectedIds.size} santri sebagai Alumni?`)) return;
+        const now = new Date().toLocaleDateString('id-ID');
+        db.santri = db.santri.filter(s => {
+            if(selectedIds.has(s.id.toString())) { db.alumni.push({ ...s, tanggalAlumni: now }); return false; }
+            return true;
+        });
+    } else if(val === 'khidmah') {
+        db.santri.forEach(s => { if(selectedIds.has(s.id.toString())) s.status = 'Khidmah'; });
+    } else if(val === 'bertugas') {
+        db.santri.forEach(s => { if(selectedIds.has(s.id.toString())) s.status = 'Bertugas'; });
+    } else if(val === 'export') {
+        exportData('filtered');
+    }
+
+    saveDB();
+    selectedIds.clear();
+    updateBulkUI();
+    renderTableSantri();
+    renderStats();
+    document.getElementById('bulk-select').value = "";
+}
+</script>
 
                 <!-- PAGE: PERIZINAN -->
                 <div id="page-perizinan" class="page-view hidden space-y-6">
@@ -852,4 +966,5 @@
     </script>
 </body>
 </html>
+
 
