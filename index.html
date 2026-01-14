@@ -118,11 +118,13 @@
                     </div>
                 </div>
 
-                <!-- ================= DATA SANTRI ================= -->
+               <!-- ================= DATA SANTRI ================= -->
 <div class="p-4">
     <div class="flex justify-between mb-4">
         <h2 class="text-xl font-bold">Data Santri</h2>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700" onclick="openModal('modal-santri'); editId=null; clearSantriForm()">Tambah Santri</button>
+        <button class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700" onclick="openSantriModal()">
+            Tambah Santri
+        </button>
     </div>
 
     <!-- Bulk Action -->
@@ -139,7 +141,7 @@
 
     <!-- Tabel Santri -->
     <div class="overflow-x-auto">
-        <table class="w-full border rounded-xl text-sm" id="table-santri">
+        <table class="w-full border rounded-xl text-sm">
             <thead class="bg-gray-100">
                 <tr>
                     <th class="border px-2 py-1"><input type="checkbox" id="check-all" onclick="toggleAll(this)"></th>
@@ -156,9 +158,7 @@
                     <th class="border px-2 py-1">Aksi</th>
                 </tr>
             </thead>
-            <tbody id="tbody-santri">
-                <!-- data santri akan di-render di sini -->
-            </tbody>
+            <tbody id="tbody-santri"></tbody>
         </table>
     </div>
 </div>
@@ -167,7 +167,7 @@
 <div id="modal-santri" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-2xl w-96 p-6 space-y-4 relative">
         <h2 class="font-bold text-lg">Form Santri</h2>
-        <button onclick="closeModal('modal-santri')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">&times;</button>
+        <button onclick="closeSantriModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">&times;</button>
 
         <input type="text" id="s-nama" placeholder="Nama Santri" class="w-full px-4 py-2 border rounded-xl text-sm outline-none">
         <select id="s-gender" class="w-full px-4 py-2 border rounded-xl text-sm outline-none">
@@ -190,17 +190,95 @@
 </div>
 
 <script>
-// ======== DATABASE SEMENTARA ========
-let db = {
-    santri: []
-};
+let db = { santri: [] };
 let editId = null;
 
-// ======== RENDER TABEL SANTRI ========
-function renderTableSantri() {
+// ===== LOAD DATA DARI localStorage =====
+function loadData() {
+    const data = localStorage.getItem('dbSantri');
+    if(data) db.santri = JSON.parse(data);
+}
+function saveData() {
+    localStorage.setItem('dbSantri', JSON.stringify(db.santri));
+}
+
+// ===== MODAL =====
+function openSantriModal() { editId = null; clearSantriForm(); document.getElementById('modal-santri').classList.remove('hidden'); }
+function closeSantriModal() { document.getElementById('modal-santri').classList.add('hidden'); }
+
+// ===== CLEAR FORM =====
+function clearSantriForm() {
+    document.getElementById('s-nama').value = '';
+    document.getElementById('s-gender').value = 'Laki-laki';
+    document.getElementById('s-asrama').value = '';
+    document.getElementById('s-sekolah').value = 'MI';
+    updateKelasSelect('s-kelas','MI');
+    document.getElementById('s-wali').value = '';
+    document.getElementById('s-alamat').value = '';
+    document.getElementById('s-telp').value = '';
+}
+
+// ===== UPDATE KELAS =====
+function updateKelasSelect(kelasId, sekolah){
+    const options = {MI:['1','2','3','4','5','6'], MTs:['7','8','9'], MA:['10','11','12']};
+    document.getElementById(kelasId).innerHTML = options[sekolah].map(k=>`<option value="${k}">${k}</option>`).join('');
+}
+
+// ===== SIMPAN / UPDATE SANTRI =====
+function saveSantri() {
+    const s = {
+        id: editId || Date.now(),
+        nama: document.getElementById('s-nama').value,
+        gender: document.getElementById('s-gender').value,
+        asrama: document.getElementById('s-asrama').value,
+        sekolah: document.getElementById('s-sekolah').value,
+        kelas: document.getElementById('s-kelas').value,
+        wali: document.getElementById('s-wali').value || '-',
+        alamat: document.getElementById('s-alamat').value || '-',
+        telp: document.getElementById('s-telp').value || '-',
+        status: 'Santri',
+        sync: navigator.onLine ? 'Synced' : 'Pending'
+    };
+
+    if(editId){
+        const idx = db.santri.findIndex(x => x.id == editId);
+        if(idx >= 0) db.santri[idx] = s;
+        alert('Data santri diperbarui!');
+    } else {
+        db.santri.push(s);
+        alert('Santri baru ditambahkan!');
+    }
+
+    // ===== SIMPAN KE localStorage / nanti diganti GAS =====
+    saveData();
+    editId = null;
+    closeSantriModal();
+    renderTableSantri();
+}
+
+// ===== EDIT SANTRI =====
+function editSantri(id){
+    const s = db.santri.find(x => x.id == id);
+    if(!s) return alert('Santri tidak ditemukan!');
+    editId = id;
+    openSantriModal();
+
+    document.getElementById('s-nama').value = s.nama;
+    document.getElementById('s-gender').value = s.gender;
+    document.getElementById('s-asrama').value = s.asrama;
+    document.getElementById('s-sekolah').value = s.sekolah;
+    updateKelasSelect('s-kelas', s.sekolah);
+    document.getElementById('s-kelas').value = s.kelas;
+    document.getElementById('s-wali').value = s.wali;
+    document.getElementById('s-alamat').value = s.alamat;
+    document.getElementById('s-telp').value = s.telp;
+}
+
+// ===== RENDER TABEL SANTRI =====
+function renderTableSantri(){
     const tbody = document.getElementById('tbody-santri');
     tbody.innerHTML = db.santri.map(s => `
-        <tr class="border-b">
+        <tr class="border-b hover:bg-gray-50">
             <td class="border px-2 py-1 text-center"><input type="checkbox" class="check-santri" data-id="${s.id}"></td>
             <td class="border px-2 py-1">${s.nama}</td>
             <td class="border px-2 py-1">${s.gender}</td>
@@ -213,123 +291,37 @@ function renderTableSantri() {
             <td class="border px-2 py-1">${s.status}</td>
             <td class="border px-2 py-1">${s.sync}</td>
             <td class="border px-2 py-1 text-center">
-                <button class="bg-yellow-500 text-white px-2 py-1 rounded-xl hover:bg-yellow-600" onclick="editSantri(${s.id})">Edit</button>
+                <button class="bg-yellow-500 text-white px-2 py-1 rounded-xl hover:bg-yellow-600" onclick="editSantri(${s.id})">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
             </td>
         </tr>
     `).join('');
 }
 
-// ======== CLEAR FORM ========
-function clearSantriForm() {
-    document.getElementById('s-nama').value = '';
-    document.getElementById('s-gender').value = 'Laki-laki';
-    document.getElementById('s-asrama').value = '';
-    document.getElementById('s-sekolah').value = 'MI';
-    updateKelasSelect('s-kelas', 'MI');
-    document.getElementById('s-wali').value = '';
-    document.getElementById('s-alamat').value = '';
-    document.getElementById('s-telp').value = '';
-}
-
-// ======== MODAL ========
-function openModal(id){document.getElementById(id).classList.remove('hidden');}
-function closeModal(id){document.getElementById(id).classList.add('hidden');}
-
-// ======== UPDATE KELAS BERDASARKAN SEKOLAH ========
-function updateKelasSelect(kelasId, sekolah){
-    const kelasOptions = {MI:['1','2','3','4','5','6'], MTs:['7','8','9'], MA:['10','11','12']};
-    const sel = document.getElementById(kelasId);
-    sel.innerHTML = kelasOptions[sekolah]?.map(k=>`<option value="${k}">${k}</option>`).join('')||'';
-}
-
-// ======== SIMPAN / UPDATE SANTRI ========
-function saveSantri() {
-    const s = {
-        id: editId||Date.now(),
-        nama: document.getElementById('s-nama').value,
-        gender: document.getElementById('s-gender').value,
-        asrama: document.getElementById('s-asrama').value,
-        sekolah: document.getElementById('s-sekolah').value,
-        kelas: document.getElementById('s-kelas').value,
-        wali: document.getElementById('s-wali').value||'-',
-        alamat: document.getElementById('s-alamat').value||'-',
-        telp: document.getElementById('s-telp').value||'-',
-        status: 'Santri',
-        sync: navigator.onLine ? 'Synced' : 'Pending'
-    };
-    if(editId){
-        const idx = db.santri.findIndex(x=>x.id==editId);
-        if(idx>=0) db.santri[idx]=s;
-        alert('Data santri diperbarui!');
-    } else {
-        db.santri.push(s);
-        alert('Santri baru ditambahkan!');
-    }
-    editId=null;
-    closeModal('modal-santri');
-    renderTableSantri();
-}
-
-// ======== EDIT SANTRI ========
-function editSantri(id){
-    const s = db.santri.find(x=>x.id==id);
-    if(!s) return alert('Santri tidak ditemukan!');
-    editId = id;
-    openModal('modal-santri');
-    document.getElementById('s-nama').value = s.nama;
-    document.getElementById('s-gender').value = s.gender;
-    document.getElementById('s-asrama').value = s.asrama;
-    document.getElementById('s-sekolah').value = s.sekolah;
-    updateKelasSelect('s-kelas', s.sekolah);
-    document.getElementById('s-kelas').value = s.kelas;
-    document.getElementById('s-wali').value = s.wali;
-    document.getElementById('s-alamat').value = s.alamat;
-    document.getElementById('s-telp').value = s.telp;
-}
-
-// ======== BULK ACTION ========
-function toggleAll(el){
-    document.querySelectorAll('.check-santri').forEach(cb=>cb.checked=el.checked);
-}
+// ===== BULK ACTION =====
+function toggleAll(el){ document.querySelectorAll('.check-santri').forEach(cb => cb.checked = el.checked); }
 
 function applyBulkAction(){
     const action = document.getElementById('bulk-action').value;
     if(!action) return alert('Pilih aksi bulk terlebih dahulu!');
-    const selected = Array.from(document.querySelectorAll('.check-santri:checked')).map(cb=>parseInt(cb.dataset.id));
-    if(selected.length==0) return alert('Pilih santri terlebih dahulu!');
-    
-    if(action=='naik-kelas'){
-        selected.forEach(id=>{
-            const s=db.santri.find(x=>x.id==id);
-            if(s) s.kelas = String(Number(s.kelas)+1);
-        });
-        alert('Santri naik kelas!');
-    } else if(action=='set-bertugas'){
-        selected.forEach(id=>{
-            const s=db.santri.find(x=>x.id==id);
-            if(s) s.status = 'Bertugas';
-        });
-        alert('Santri di-set bertugas!');
-    } else if(action=='khidmah'){
-        selected.forEach(id=>{
-            const s=db.santri.find(x=>x.id==id);
-            if(s) s.status = 'Khidmah';
-        });
-        alert('Santri di-set khidmah!');
-    } else if(action=='alumni'){
-        selected.forEach(id=>{
-            const s=db.santri.find(x=>x.id==id);
-            if(s) s.status = 'Alumni';
-        });
-        alert('Santri di-set alumni!');
-    }
+    const selected = Array.from(document.querySelectorAll('.check-santri:checked')).map(cb => parseInt(cb.dataset.id));
+    if(selected.length == 0) return alert('Pilih santri terlebih dahulu!');
+
+    if(action == 'naik-kelas') selected.forEach(id => { const s=db.santri.find(x=>x.id==id); if(s) s.kelas = String(Number(s.kelas)+1); });
+    else if(action == 'set-bertugas') selected.forEach(id => { const s=db.santri.find(x=>x.id==id); if(s) s.status = 'Bertugas'; });
+    else if(action == 'khidmah') selected.forEach(id => { const s=db.santri.find(x=>x.id==id); if(s) s.status = 'Khidmah'; });
+    else if(action == 'alumni') selected.forEach(id => { const s=db.santri.find(x=>x.id==id); if(s) s.status = 'Alumni'; });
+
+    saveData();
     renderTableSantri();
+    alert('Bulk action diterapkan!');
 }
 
-// ======== INISIAL ========
+// ===== INISIAL =====
+loadData();
 renderTableSantri();
 </script>
-
                 <!-- PAGE: PERIZINAN -->
                 <div id="page-perizinan" class="page-view hidden space-y-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -1000,6 +992,7 @@ renderTableSantri();
     </script>
 </body>
 </html>
+
 
 
 
