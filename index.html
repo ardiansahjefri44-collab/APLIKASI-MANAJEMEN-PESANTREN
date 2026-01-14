@@ -288,4 +288,147 @@ function renderSidebar() {
 function showPage(id) {
     document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
     const page = document.getElementById('page-' + id);
-    if(page) page.classList.remove('
+    if(page) page.classList.remove('hidden');
+    document.getElementById('page-title').innerText = id.charAt(0).toUpperCase() + id.slice(1);
+}
+
+/* ===== LOGOUT ===== */
+function logout() {
+    sessionStorage.removeItem('esantri_session');
+    location.reload();
+}
+
+/* ===== DATA SANTRI ===== */
+function renderTableSantri() {
+    const tbody = document.getElementById('tbody-santri');
+    tbody.innerHTML = '';
+    db.santri.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="border px-2 py-1 text-center"><input type="checkbox" data-id="${s.id}"></td>
+            <td class="border px-2 py-1">${s.nama}</td>
+            <td class="border px-2 py-1">${s.gender}</td>
+            <td class="border px-2 py-1">${s.asrama}</td>
+            <td class="border px-2 py-1">${s.sekolah}</td>
+            <td class="border px-2 py-1">${s.kelas}</td>
+            <td class="border px-2 py-1">${s.wali}</td>
+            <td class="border px-2 py-1">${s.alamat}</td>
+            <td class="border px-2 py-1">${s.telp}</td>
+            <td class="border px-2 py-1">${s.status || 'Aktif'}</td>
+            <td class="border px-2 py-1 text-center">${s.synced ? '<span class="status-synced">Synced</span>' : '<span class="status-pending">Pending</span>'}</td>
+            <td class="border px-2 py-1 text-center">
+                <button class="text-blue-600 hover:underline" onclick="editSantri(${s.id})">Edit</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function openSantriModal() {
+    editId = null;
+    document.getElementById('s-nama').value = '';
+    document.getElementById('s-gender').value = 'Laki-laki';
+    document.getElementById('s-asrama').value = '';
+    document.getElementById('s-sekolah').value = 'MI';
+    updateKelasSelect('s-kelas', 'MI');
+    document.getElementById('s-wali').value = '';
+    document.getElementById('s-alamat').value = '';
+    document.getElementById('s-telp').value = '';
+    document.getElementById('modal-santri').classList.remove('hidden');
+}
+
+function closeSantriModal() {
+    document.getElementById('modal-santri').classList.add('hidden');
+}
+
+function saveSantri() {
+    const santriData = {
+        id: editId || Date.now(),
+        nama: document.getElementById('s-nama').value,
+        gender: document.getElementById('s-gender').value,
+        asrama: document.getElementById('s-asrama').value,
+        sekolah: document.getElementById('s-sekolah').value,
+        kelas: document.getElementById('s-kelas').value,
+        wali: document.getElementById('s-wali').value,
+        alamat: document.getElementById('s-alamat').value,
+        telp: document.getElementById('s-telp').value,
+        status: 'Aktif',
+        synced: false
+    };
+
+    if(editId) {
+        const idx = db.santri.findIndex(s => s.id === editId);
+        db.santri[idx] = santriData;
+    } else {
+        db.santri.push(santriData);
+    }
+
+    saveDB();
+    renderTableSantri();
+    closeSantriModal();
+}
+
+function editSantri(id) {
+    const s = db.santri.find(x => x.id === id);
+    if(!s) return;
+    editId = id;
+    document.getElementById('s-nama').value = s.nama;
+    document.getElementById('s-gender').value = s.gender;
+    document.getElementById('s-asrama').value = s.asrama;
+    document.getElementById('s-sekolah').value = s.sekolah;
+    updateKelasSelect('s-kelas', s.sekolah);
+    document.getElementById('s-kelas').value = s.kelas;
+    document.getElementById('s-wali').value = s.wali;
+    document.getElementById('s-alamat').value = s.alamat;
+    document.getElementById('s-telp').value = s.telp;
+    document.getElementById('modal-santri').classList.remove('hidden');
+}
+
+/* ===== KELAS SESUAI SEKOLAH ===== */
+function updateKelasSelect(id, sekolah) {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '';
+    let kelas = [];
+    if(sekolah === 'MI') kelas = ['1','2','3','4','5','6'];
+    if(sekolah === 'MTs') kelas = ['7','8','9'];
+    if(sekolah === 'MA') kelas = ['10','11','12'];
+    kelas.forEach(k => sel.innerHTML += `<option value="${k}">${k}</option>`);
+}
+
+/* ===== BULK ACTION ===== */
+function toggleAll(el) {
+    document.querySelectorAll('#tbody-santri input[type=checkbox]').forEach(cb => cb.checked = el.checked);
+}
+
+function applyBulkAction() {
+    const action = document.getElementById('bulk-action').value;
+    const checkedIds = Array.from(document.querySelectorAll('#tbody-santri input[type=checkbox]:checked')).map(cb => parseInt(cb.dataset.id));
+    if(!action || checkedIds.length === 0) return alert("Pilih aksi dan minimal satu santri");
+
+    checkedIds.forEach(id => {
+        const s = db.santri.find(x => x.id === id);
+        if(!s) return;
+        if(action === 'naik-kelas') {
+            let kelas = parseInt(s.kelas);
+            s.kelas = (kelas + 1).toString();
+        }
+        if(action === 'alumni') s.status = 'Alumni';
+        if(action === 'set-bertugas') s.status = 'Bertugas';
+        if(action === 'khidmah') s.status = 'Khidmah';
+    });
+    saveDB();
+    renderTableSantri();
+}
+
+/* ===== SYNC ===== */
+function manualSync() {
+    if(!navigator.onLine) return alert("Tidak ada koneksi internet!");
+    db.santri.forEach(s => s.synced = true);
+    saveDB();
+    renderTableSantri();
+    alert("Sync berhasil!");
+}
+</script>
+
+</body>
+</html>
