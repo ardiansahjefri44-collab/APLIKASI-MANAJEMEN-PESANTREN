@@ -208,12 +208,13 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
                 <div>
-                    <h3 class="font-bold text-xl">Pusat Perizinan</h3>
-                    <p class="text-sm text-gray-500">Pilih mode perizinan yang sedang berlaku.</p>
+                    <h3 class="font-bold text-xl">Logistik Keamanan</h3>
+                    <p class="text-sm text-gray-500">Kelola izin keluar atau catat kepulangan santri.</p>
                 </div>
-                <div class="flex p-1 bg-gray-100 rounded-xl self-start">
-                    <button onclick="toggleIzinMode('biasa')" id="tab-izin-biasa" class="px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600 transition-all">Izin Biasa</button>
-                    <button onclick="toggleIzinMode('libur')" id="tab-izin-libur" class="px-6 py-2 rounded-lg text-sm font-bold text-gray-500 transition-all">Libur Panjang</button>
+                <div class="flex p-1 bg-gray-100 rounded-xl self-start overflow-x-auto max-w-full">
+                    <button onclick="toggleIzinMode('biasa')" id="tab-izin-biasa" class="whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600 transition-all">Izin Biasa</button>
+                    <button onclick="toggleIzinMode('libur')" id="tab-izin-libur" class="whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold text-gray-500 transition-all">Libur Panjang</button>
+                    <button onclick="toggleIzinMode('checkin')" id="tab-izin-checkin" class="whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold text-gray-500 transition-all">Check In</button>
                 </div>
             </div>
 
@@ -225,25 +226,24 @@
                     </div>
                     
                     <div class="flex gap-2">
-                        <button onclick="startScanner()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-green-100 hover:bg-green-700 transition-all">Mulai Scan</button>
+                        <button onclick="startScanner()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-green-100 hover:bg-green-700 transition-all" id="btn-scan-main">Mulai Scan</button>
                         <button onclick="stopScanner()" class="px-4 border rounded-xl text-gray-400 hover:text-red-500 transition-all"><i class="fas fa-power-off"></i></button>
                     </div>
 
-                    <!-- FORM TAMBAHAN SESUAI MODE -->
                     <div id="izin-form-inputs" class="bg-gray-50 p-4 rounded-2xl space-y-3 border border-gray-100">
-                        <!-- Fields for Izin Biasa -->
+                        <!-- Fields Izin Biasa -->
                         <div id="fields-biasa" class="grid grid-cols-2 gap-3">
                             <div class="col-span-2">
                                 <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Alasan Keluar</label>
                                 <input type="text" id="biasa-alasan" placeholder="Contoh: Beli kitab, berobat..." class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div class="col-span-2">
-                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Batas Kembali (Tanggal & Jam)</label>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Batas Kembali</label>
                                 <input type="datetime-local" id="biasa-deadline" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                         </div>
 
-                        <!-- Fields for Libur Panjang -->
+                        <!-- Fields Libur Panjang -->
                         <div id="fields-libur" class="hidden grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Mulai Libur</label>
@@ -255,11 +255,21 @@
                             </div>
                         </div>
 
+                        <!-- Fields Check In -->
+                        <div id="fields-checkin" class="hidden">
+                            <div class="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                                <p class="text-[10px] font-bold text-purple-700 uppercase mb-1 flex items-center">
+                                    <i class="fas fa-info-circle mr-1"></i> Mode Check In Otomatis
+                                </p>
+                                <p class="text-[11px] text-purple-600 leading-tight">Status santri akan otomatis diperbarui menjadi "Kembali" saat ID diproses.</p>
+                            </div>
+                        </div>
+
                         <div class="relative pt-2">
                             <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">ID Santri</label>
                             <div class="flex gap-2">
                                 <input type="text" id="manual-nis" placeholder="Scan atau Ketik ID..." class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition-all font-mono" onkeypress="if(event.key === 'Enter') processIzin(this.value)">
-                                <button onclick="processIzin(document.getElementById('manual-nis').value)" class="bg-gray-800 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-black transition-all">Proses</button>
+                                <button id="btn-proses-manual" onclick="processIzin(document.getElementById('manual-nis').value)" class="bg-gray-800 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-black transition-all">Proses</button>
                             </div>
                         </div>
                     </div>
@@ -909,5 +919,6 @@
     </script>
 </body>
 </html>
+
 
 
