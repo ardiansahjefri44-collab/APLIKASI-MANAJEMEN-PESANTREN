@@ -203,47 +203,83 @@
         </div>
     </div>
 
-                <!-- PAGE: PERIZINAN -->
-                <div id="page-perizinan" class="page-view hidden space-y-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
-                            <div>
-                                <h3 class="font-bold text-xl">Pusat Perizinan</h3>
-                                <p class="text-sm text-gray-500">Pilih mode perizinan yang sedang berlaku.</p>
+    <!-- PAGE: PERIZINAN -->
+    <div id="page-perizinan" class="page-view space-y-6 max-w-7xl mx-auto">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="font-bold text-xl">Pusat Perizinan</h3>
+                    <p class="text-sm text-gray-500">Pilih mode perizinan yang sedang berlaku.</p>
+                </div>
+                <div class="flex p-1 bg-gray-100 rounded-xl self-start">
+                    <button onclick="toggleIzinMode('biasa')" id="tab-izin-biasa" class="px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600 transition-all">Izin Biasa</button>
+                    <button onclick="toggleIzinMode('libur')" id="tab-izin-libur" class="px-6 py-2 rounded-lg text-sm font-bold text-gray-500 transition-all">Libur Panjang</button>
+                </div>
+            </div>
+
+            <!-- SCANNER SECTION -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                    <div id="qr-reader" class="w-full rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center text-gray-600 relative">
+                        <i class="fas fa-camera text-3xl"></i>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="startScanner()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-green-100 hover:bg-green-700 transition-all">Mulai Scan</button>
+                        <button onclick="stopScanner()" class="px-4 border rounded-xl text-gray-400 hover:text-red-500 transition-all"><i class="fas fa-power-off"></i></button>
+                    </div>
+
+                    <!-- FORM TAMBAHAN SESUAI MODE -->
+                    <div id="izin-form-inputs" class="bg-gray-50 p-4 rounded-2xl space-y-3 border border-gray-100">
+                        <!-- Fields for Izin Biasa -->
+                        <div id="fields-biasa" class="grid grid-cols-2 gap-3">
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Alasan Keluar</label>
+                                <input type="text" id="biasa-alasan" placeholder="Contoh: Beli kitab, berobat..." class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500">
                             </div>
-                            <div class="flex p-1 bg-gray-100 rounded-xl">
-                                <button onclick="toggleIzinMode('biasa')" id="tab-izin-biasa" class="px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600">Izin Biasa</button>
-                                <button onclick="toggleIzinMode('libur')" id="tab-izin-libur" class="px-6 py-2 rounded-lg text-sm font-bold text-gray-500">Libur Panjang</button>
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Batas Kembali (Tanggal & Jam)</label>
+                                <input type="datetime-local" id="biasa-deadline" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                         </div>
 
-                        <!-- SCANNER SECTION -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <div id="qr-reader" class="w-full rounded-2xl overflow-hidden bg-black aspect-video"></div>
-                                <div class="flex gap-2">
-                                    <button onclick="startScanner()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-green-100">Mulai Scan</button>
-                                    <button onclick="stopScanner()" class="px-4 border rounded-xl text-gray-400"><i class="fas fa-power-off"></i></button>
-                                </div>
-                                <div class="relative">
-                                    <input type="text" id="manual-nis" placeholder="Input Manual ID Santri..." class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-green-500">
-                                    <button onclick="processIzin(document.getElementById('manual-nis').value)" class="absolute right-2 top-2 bg-gray-800 text-white px-4 py-1.2 rounded-lg text-sm">Proses</button>
-                                </div>
+                        <!-- Fields for Libur Panjang -->
+                        <div id="fields-libur" class="hidden grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Mulai Libur</label>
+                                <input type="date" id="libur-start" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Selesai Libur</label>
+                                <input type="date" id="libur-end" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
 
-                            <div class="space-y-4">
-                                <div id="izin-mode-indicator" class="p-4 bg-green-50 border border-green-100 rounded-2xl">
-                                    <h4 class="font-bold text-green-800" id="mode-title">Mode: Izin Keluar Biasa</h4>
-                                    <p class="text-xs text-green-600" id="mode-desc">Santri keluar untuk keperluan jangka pendek (belanja, berobat, dll).</p>
-                                </div>
-                                <div id="izin-status-log" class="space-y-2 max-h-[300px] overflow-y-auto">
-                                    <!-- Log entry -->
-                                </div>
+                        <div class="relative pt-2">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">ID Santri</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="manual-nis" placeholder="Scan atau Ketik ID..." class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition-all font-mono" onkeypress="if(event.key === 'Enter') processIzin(this.value)">
+                                <button onclick="processIzin(document.getElementById('manual-nis').value)" class="bg-gray-800 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-black transition-all">Proses</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <div class="space-y-4">
+                    <div id="izin-mode-indicator" class="p-4 bg-green-50 border border-green-100 rounded-2xl transition-all">
+                        <h4 class="font-bold text-green-800" id="mode-title">Mode: Izin Keluar Biasa</h4>
+                        <p class="text-xs text-green-600" id="mode-desc">Santri keluar untuk keperluan jangka pendek (belanja, berobat, dll).</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-2xl p-4 min-h-[300px] border border-gray-100 flex flex-col">
+                        <h5 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">Log Aktivitas Terbaru</h5>
+                        <div id="izin-status-log" class="space-y-2 flex-1 overflow-y-auto">
+                            <p id="log-placeholder" class="text-center text-gray-300 py-20 text-xs italic">Belum ada aktivitas scan</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
                 <!-- PAGE: PENGATURAN -->
                 <div id="page-pengaturan" class="page-view hidden space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -873,4 +909,5 @@
     </script>
 </body>
 </html>
+
 
