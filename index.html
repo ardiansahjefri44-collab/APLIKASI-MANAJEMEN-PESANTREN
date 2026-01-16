@@ -203,87 +203,112 @@
         </div>
     </div>
 
-    <!-- PAGE: PERIZINAN -->
-    <div id="page-perizinan" class="page-view space-y-6 max-w-7xl mx-auto">
+    <!-- PAGE: PERIZINAN (KONTEN UTAMA) -->
+    <div id="page-perizinan" class="space-y-6 max-w-7xl mx-auto">
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
-                <div>
-                    <h3 class="font-bold text-xl">Logistik Keamanan</h3>
-                    <p class="text-sm text-gray-500">Kelola izin keluar atau catat kepulangan santri.</p>
-                </div>
+            <div class="flex flex-col md:flex-row justify-between gap-4 mb-8">
                 <div class="flex p-1 bg-gray-100 rounded-xl self-start overflow-x-auto max-w-full">
-                    <button onclick="toggleIzinMode('biasa')" id="tab-izin-biasa" class="whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600 transition-all">Izin Biasa</button>
-                    <button onclick="toggleIzinMode('libur')" id="tab-izin-libur" class="whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold text-gray-500 transition-all">Libur Panjang</button>
-                    <button onclick="toggleIzinMode('checkin')" id="tab-izin-checkin" class="whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold text-gray-500 transition-all">Check In</button>
+                    <button onclick="toggleIzinMode('biasa')" id="tab-izin-biasa" class="whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600 transition-all">
+                        <i class="fas fa-walking mr-2"></i>Izin Biasa
+                    </button>
+                    <button onclick="toggleIzinMode('libur')" id="tab-izin-libur" class="whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 transition-all">
+                        <i class="fas fa-home mr-2"></i>Libur Panjang
+                    </button>
+                    <button onclick="toggleIzinMode('checkin')" id="tab-izin-checkin" class="whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 transition-all">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Check In
+                    </button>
                 </div>
             </div>
 
             <!-- SCANNER SECTION -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="space-y-4">
-                    <div id="qr-reader" class="w-full rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center text-gray-600 relative">
-                        <i class="fas fa-camera text-3xl"></i>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div class="space-y-6">
+                    <div id="qr-reader" class="w-full rounded-3xl overflow-hidden bg-gray-900 aspect-video flex items-center justify-center text-gray-500 relative border-4 border-white shadow-xl">
+                        <div class="text-center">
+                            <i class="fas fa-camera text-4xl mb-3 block"></i>
+                            <p class="text-xs font-bold uppercase tracking-widest">Kamera Siap</p>
+                        </div>
                     </div>
                     
-                    <div class="flex gap-2">
-                        <button onclick="startScanner()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-green-100 hover:bg-green-700 transition-all" id="btn-scan-main">Mulai Scan</button>
-                        <button onclick="stopScanner()" class="px-4 border rounded-xl text-gray-400 hover:text-red-500 transition-all"><i class="fas fa-power-off"></i></button>
+                    <div class="flex gap-3">
+                        <button onclick="startScanner()" class="flex-1 bg-green-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-green-100 hover:bg-green-700 transition-all transform active:scale-95" id="btn-scan-main">
+                            Mulai Scanning
+                        </button>
+                        <button onclick="stopScanner()" class="px-6 border-2 border-gray-100 rounded-2xl text-gray-400 hover:text-red-500 hover:border-red-50 transition-all">
+                            <i class="fas fa-power-off"></i>
+                        </button>
                     </div>
 
-                    <div id="izin-form-inputs" class="bg-gray-50 p-4 rounded-2xl space-y-3 border border-gray-100">
+                    <div id="izin-form-inputs" class="bg-gray-50 p-6 rounded-3xl space-y-4 border border-gray-100">
                         <!-- Fields Izin Biasa -->
-                        <div id="fields-biasa" class="grid grid-cols-2 gap-3">
+                        <div id="fields-biasa" class="grid grid-cols-2 gap-4">
                             <div class="col-span-2">
-                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Alasan Keluar</label>
-                                <input type="text" id="biasa-alasan" placeholder="Contoh: Beli kitab, berobat..." class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Alasan Keluar</label>
+                                <input type="text" id="biasa-alasan" placeholder="Contoh: Beli kitab, berobat..." class="w-full px-4 py-3 border-2 border-transparent bg-white rounded-xl text-sm outline-none focus:border-green-500 transition-all shadow-sm">
                             </div>
                             <div class="col-span-2">
-                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Batas Kembali</label>
-                                <input type="datetime-local" id="biasa-deadline" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Batas Kembali</label>
+                                <input type="datetime-local" id="biasa-deadline" class="w-full px-4 py-3 border-2 border-transparent bg-white rounded-xl text-sm outline-none focus:border-green-500 transition-all shadow-sm">
                             </div>
                         </div>
 
                         <!-- Fields Libur Panjang -->
-                        <div id="fields-libur" class="hidden grid grid-cols-2 gap-3">
+                        <div id="fields-libur" class="hidden grid grid-cols-2 gap-4">
                             <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Mulai Libur</label>
-                                <input type="date" id="libur-start" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Mulai Libur</label>
+                                <input type="date" id="libur-start" class="w-full px-4 py-3 border-2 border-transparent bg-white rounded-xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm">
                             </div>
                             <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Selesai Libur</label>
-                                <input type="date" id="libur-end" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Selesai Libur</label>
+                                <input type="date" id="libur-end" class="w-full px-4 py-3 border-2 border-transparent bg-white rounded-xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm">
                             </div>
                         </div>
 
                         <!-- Fields Check In -->
                         <div id="fields-checkin" class="hidden">
-                            <div class="bg-purple-50 p-3 rounded-xl border border-purple-100">
-                                <p class="text-[10px] font-bold text-purple-700 uppercase mb-1 flex items-center">
+                            <div class="bg-purple-600 p-4 rounded-2xl text-white shadow-lg shadow-purple-100">
+                                <p class="text-[10px] font-bold uppercase mb-1 opacity-80 flex items-center">
                                     <i class="fas fa-info-circle mr-1"></i> Mode Check In Otomatis
                                 </p>
-                                <p class="text-[11px] text-purple-600 leading-tight">Status santri akan otomatis diperbarui menjadi "Kembali" saat ID diproses.</p>
+                                <p class="text-xs font-medium leading-tight">Gunakan mode ini saat santri kembali ke asrama. Data kehadiran akan langsung diperbarui.</p>
                             </div>
                         </div>
 
                         <div class="relative pt-2">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">ID Santri</label>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Manual ID Santri</label>
                             <div class="flex gap-2">
-                                <input type="text" id="manual-nis" placeholder="Scan atau Ketik ID..." class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition-all font-mono" onkeypress="if(event.key === 'Enter') processIzin(this.value)">
-                                <button id="btn-proses-manual" onclick="processIzin(document.getElementById('manual-nis').value)" class="bg-gray-800 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-black transition-all">Proses</button>
+                                <input type="text" id="manual-nis" placeholder="ID Santri..." class="flex-1 px-4 py-3 border-2 border-transparent bg-white rounded-xl outline-none focus:border-gray-800 transition-all font-mono font-bold shadow-sm" onkeypress="if(event.key === 'Enter') processIzin(this.value)">
+                                <button id="btn-proses-manual" onclick="processIzin(document.getElementById('manual-nis').value)" class="bg-gray-800 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-200">
+                                    Proses
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-4">
-                    <div id="izin-mode-indicator" class="p-4 bg-green-50 border border-green-100 rounded-2xl transition-all">
-                        <h4 class="font-bold text-green-800" id="mode-title">Mode: Izin Keluar Biasa</h4>
-                        <p class="text-xs text-green-600" id="mode-desc">Santri keluar untuk keperluan jangka pendek (belanja, berobat, dll).</p>
+                <div class="flex flex-col h-full space-y-4">
+                    <div id="izin-mode-indicator" class="p-6 bg-green-50 border border-green-100 rounded-3xl transition-all shadow-sm">
+                        <div class="flex items-center gap-4">
+                            <div id="mode-icon-container" class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-green-600 shadow-sm border border-green-100">
+                                <i class="fas fa-walking text-xl" id="mode-icon-display"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-green-800" id="mode-title">Izin Keluar Biasa</h4>
+                                <p class="text-xs text-green-600" id="mode-desc">Santri keluar untuk keperluan jangka pendek.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-gray-50 rounded-2xl p-4 min-h-[300px] border border-gray-100 flex flex-col">
-                        <h5 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">Log Aktivitas Terbaru</h5>
-                        <div id="izin-status-log" class="space-y-2 flex-1 overflow-y-auto">
-                            <p id="log-placeholder" class="text-center text-gray-300 py-20 text-xs italic">Belum ada aktivitas scan</p>
+
+                    <div class="bg-white rounded-3xl p-6 flex-1 border border-gray-100 shadow-inner flex flex-col max-h-[500px]">
+                        <div class="flex items-center justify-between mb-4">
+                            <h5 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Log Aktivitas Terbaru</h5>
+                            <button onclick="clearLog()" class="text-[9px] font-bold text-gray-400 hover:text-red-500 uppercase">Hapus Semua</button>
+                        </div>
+                        <div id="izin-status-log" class="space-y-3 flex-1 overflow-y-auto pr-2">
+                            <div id="log-placeholder" class="text-center py-20">
+                                <i class="fas fa-qrcode text-4xl text-gray-100 mb-3 block"></i>
+                                <p class="text-gray-300 text-xs italic">Menunggu pemindaian atau input manual...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -919,6 +944,7 @@
     </script>
 </body>
 </html>
+
 
 
 
