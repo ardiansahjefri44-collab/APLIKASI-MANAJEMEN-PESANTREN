@@ -315,6 +315,218 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const state = {
+            santri: [
+                { id: '24001', nama: 'Zaidan Al-Fatih', status: 'Aktif', asrama: 'Sunan Ampel' },
+                { id: '24002', nama: 'Aisyah Humaira', status: 'Aktif', asrama: 'Siti Khadijah' },
+                { id: '24003', nama: 'Rizky Ramadhan', status: 'Aktif', asrama: 'Sunan Giri' },
+                { id: '24004', nama: 'Fatimah Az-Zahra', status: 'Khidmah', asrama: 'Siti Aisyah' },
+                { id: '24005', nama: 'Muhammad Ghufron', status: 'Aktif', asrama: 'Sunan Ampel' },
+            ],
+            izinMode: 'biasa',
+            scannerActive: false
+        };
+
+        function toggleIzinMode(mode) {
+            state.izinMode = mode;
+            const tabs = {
+                biasa: document.getElementById('tab-izin-biasa'),
+                libur: document.getElementById('tab-izin-libur'),
+                checkin: document.getElementById('tab-izin-checkin')
+            };
+            const indicator = document.getElementById('izin-mode-indicator');
+            const title = document.getElementById('mode-title');
+            const desc = document.getElementById('mode-desc');
+            const iconDisplay = document.getElementById('mode-icon-display');
+            const iconContainer = document.getElementById('mode-icon-container');
+            const btnScan = document.getElementById('btn-scan-main');
+            
+            const fields = {
+                biasa: document.getElementById('fields-biasa'),
+                libur: document.getElementById('fields-libur'),
+                checkin: document.getElementById('fields-checkin')
+            };
+
+            // Reset tabs styling
+            Object.values(tabs).forEach(tab => {
+                if(tab) tab.className = "whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 transition-all";
+            });
+
+            // Hide all fields
+            Object.values(fields).forEach(f => {
+                if(f) f.classList.add('hidden');
+            });
+
+            if (mode === 'biasa') {
+                tabs.biasa.className = "whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600";
+                indicator.className = "p-6 bg-green-50 border border-green-100 rounded-3xl transition-all shadow-sm";
+                title.innerText = "Izin Keluar Biasa";
+                title.className = "font-extrabold text-green-800";
+                desc.innerText = "Santri keluar untuk keperluan jangka pendek.";
+                desc.className = "text-xs text-green-600";
+                iconDisplay.className = "fas fa-walking text-xl";
+                iconContainer.className = "w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-green-600 shadow-sm border border-green-100";
+                btnScan.className = "flex-1 bg-green-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-green-100 hover:bg-green-700 transition-all transform active:scale-95";
+                fields.biasa.classList.remove('hidden');
+            } else if (mode === 'libur') {
+                tabs.libur.className = "whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold bg-white shadow-sm text-blue-600";
+                indicator.className = "p-6 bg-blue-50 border border-blue-100 rounded-3xl transition-all shadow-sm";
+                title.innerText = "Libur Panjang";
+                title.className = "font-extrabold text-blue-800";
+                desc.innerText = "Masa liburan resmi pesantren.";
+                desc.className = "text-xs text-blue-600";
+                iconDisplay.className = "fas fa-home text-xl";
+                iconContainer.className = "w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-blue-600 shadow-sm border border-blue-100";
+                btnScan.className = "flex-1 bg-blue-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all transform active:scale-95";
+                fields.libur.classList.remove('hidden');
+            } else if (mode === 'checkin') {
+                tabs.checkin.className = "whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold bg-white shadow-sm text-purple-600";
+                indicator.className = "p-6 bg-purple-50 border border-purple-100 rounded-3xl transition-all shadow-sm";
+                title.innerText = "Check In (Kembali)";
+                title.className = "font-extrabold text-purple-800";
+                desc.innerText = "Santri kembali masuk ke area pesantren.";
+                desc.className = "text-xs text-purple-600";
+                iconDisplay.className = "fas fa-sign-in-alt text-xl";
+                iconContainer.className = "w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-purple-600 shadow-sm border border-purple-100";
+                btnScan.className = "flex-1 bg-purple-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-purple-100 hover:bg-purple-700 transition-all transform active:scale-95";
+                fields.checkin.classList.remove('hidden');
+            }
+            
+            if(state.scannerActive) {
+                stopScanner();
+                startScanner();
+            }
+        }
+
+        function startScanner() {
+            if (state.scannerActive) return;
+            state.scannerActive = true;
+            const reader = document.getElementById('qr-reader');
+            const scanClass = state.izinMode === 'checkin' ? 'checkin-anim' : 'scan-anim';
+            reader.classList.add(scanClass);
+            reader.innerHTML = `
+                <div class="z-10 bg-black/70 px-6 py-3 rounded-full text-white text-[10px] font-black animate-pulse uppercase tracking-[0.2em]">
+                    Scanner ${state.izinMode.toUpperCase()} Aktif
+                </div>
+                <div class="absolute inset-4 border-2 border-white/20 rounded-2xl"></div>
+            `;
+        }
+
+        function stopScanner() {
+            state.scannerActive = false;
+            const reader = document.getElementById('qr-reader');
+            reader.classList.remove('scan-anim', 'checkin-anim');
+            reader.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-camera text-4xl mb-3 block"></i>
+                    <p class="text-xs font-bold uppercase tracking-widest text-gray-700">Kamera Siap</p>
+                </div>
+            `;
+        }
+
+        function processIzin(id) {
+            if (!id) return;
+            const santri = state.santri.find(s => s.id === id);
+            const log = document.getElementById('izin-status-log');
+            const placeholder = document.getElementById('log-placeholder');
+            
+            if (placeholder) placeholder.remove();
+
+            const entry = document.createElement('div');
+            entry.className = "bg-white p-4 border border-gray-100 rounded-2xl shadow-sm transform transition-all hover:scale-[1.02] border-l-4";
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            if (santri) {
+                let detailText = "";
+                let iconClass = "bg-green-100 text-green-600";
+                let modeLabel = state.izinMode.toUpperCase();
+
+                if (state.izinMode === 'biasa') {
+                    const alasan = document.getElementById('biasa-alasan').value || "Keperluan mendadak";
+                    const deadline = document.getElementById('biasa-deadline').value;
+                    const deadStr = deadline ? new Date(deadline).toLocaleString('id-ID', {dateStyle: 'short', timeStyle: 'short'}) : "Sesuai Aturan";
+                    entry.classList.add('border-green-500');
+                    detailText = `<div class="mt-2 text-[10px] text-gray-500 bg-gray-50 p-2 rounded-lg italic">Alasan: ${alasan} <br> Batas Kembali: ${deadStr}</div>`;
+                } else if (state.izinMode === 'libur') {
+                    const start = document.getElementById('libur-start').value || "-";
+                    const end = document.getElementById('libur-end').value || "-";
+                    iconClass = "bg-blue-100 text-blue-600";
+                    entry.classList.add('border-blue-500');
+                    detailText = `<div class="mt-2 text-[10px] text-blue-500 bg-blue-50 p-2 rounded-lg font-bold">Periode Libur: ${start} s/d ${end}</div>`;
+                } else if (state.izinMode === 'checkin') {
+                    iconClass = "bg-purple-100 text-purple-600";
+                    modeLabel = "CHECK IN";
+                    entry.classList.add('border-purple-500');
+                    detailText = `<div class="mt-2 text-[10px] text-purple-600 bg-purple-50 p-2 rounded-lg font-bold italic"><i class="fas fa-check-circle mr-1"></i> Santri telah dikonfirmasi kembali di asrama.</div>`;
+                }
+
+                entry.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl ${iconClass} flex items-center justify-center">
+                                <i class="fas fa-check text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-extrabold text-gray-900 leading-none">${santri.nama}</p>
+                                <p class="text-[9px] text-gray-400 font-bold uppercase mt-1">ID: ${santri.id} • ${modeLabel} • ${santri.asrama}</p>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-black text-gray-300">${timeStr}</span>
+                    </div>
+                    ${detailText}
+                `;
+            } else {
+                entry.classList.add('border-red-500');
+                entry.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                                <i class="fas fa-times text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-extrabold text-red-600 leading-none">ID Tidak Terdaftar</p>
+                                <p class="text-[9px] text-gray-400 font-bold uppercase mt-1">Input: ${id}</p>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-black text-gray-300">${timeStr}</span>
+                    </div>
+                `;
+            }
+
+            log.prepend(entry);
+            document.getElementById('manual-nis').value = '';
+        }
+
+        function clearLog() {
+            const log = document.getElementById('izin-status-log');
+            log.innerHTML = `
+                <div id="log-placeholder" class="text-center py-20">
+                    <i class="fas fa-qrcode text-4xl text-gray-100 mb-3 block"></i>
+                    <p class="text-gray-300 text-xs italic">Log telah dibersihkan...</p>
+                </div>
+            `;
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const clockEl = document.getElementById('clock');
+            if(clockEl) clockEl.innerText = timeStr;
+        }
+
+        window.onload = () => {
+            setInterval(updateClock, 1000);
+            updateClock();
+            
+            const liburStart = document.getElementById('libur-start');
+            if (liburStart) {
+                liburStart.value = new Date().toISOString().split('T')[0];
+            }
+        };
                 <!-- PAGE: PENGATURAN -->
                 <div id="page-pengaturan" class="page-view hidden space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -944,6 +1156,7 @@
     </script>
 </body>
 </html>
+
 
 
 
