@@ -3,1161 +3,601 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Santri Pro - Sistem Manajemen Terpadu</title>
+    <title>E-Santri Pro - Perizinan Smart Scan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; overflow: hidden; background-color: #f9fafb; }
         .nav-active { background-color: #f0fdf4; color: #059669; border-right: 4px solid #059669; }
-        .sidebar-minimized { width: 80px !important; }
-        .sidebar-minimized .logo-text, .sidebar-minimized span { display: none; }
-        .sidebar-minimized .nav-btn { justify-content: center; }
         .scale-in { animation: scaleIn 0.2s ease-out; }
-        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .status-pending { background-color: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: bold; }
-        .status-synced { background-color: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: bold; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .custom-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .custom-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .btn-primary { background-color: #059669; color: white; transition: background 0.2s; }
+        .btn-primary:hover { background-color: #047857; }
+        #reader-global { border: none !important; width: 100% !important; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="h-screen flex text-slate-800">
 
-    <!-- LOGIN OVERLAY -->
-    <div id="login-overlay" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-md space-y-8 text-center">
-            <div id="login-logo" class="w-20 h-20 bg-green-600 rounded-2xl flex items-center justify-center text-white mx-auto shadow-xl shadow-green-100">
-                <i class="fas fa-mosque fa-3x"></i>
+    <!-- Login Page -->
+    <div id="login-page" class="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-600 p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md scale-in text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mb-4">
+                <i class="fas fa-mosque fa-2x"></i>
             </div>
-            <h1 class="text-3xl font-bold" id="login-pondok-name">E-Santri</h1>
-            <div class="space-y-4 text-left">
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase ml-2">Username</label>
-                    <input type="text" id="login-user" placeholder="admin" class="w-full px-6 py-4 border rounded-2xl text-lg outline-none focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase ml-2">Password</label>
-                    <input type="password" id="login-pass" placeholder="••••••••" class="w-full px-6 py-4 border rounded-2xl text-lg outline-none focus:ring-2 focus:ring-green-500">
-                </div>
-                <button onclick="handleLogin()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-xl hover:bg-green-700 shadow-xl shadow-green-100 transition-all">Masuk</button>
-            </div>
+            <h1 class="text-2xl font-bold">E-Santri Pro</h1>
+            <p class="text-slate-500 mb-6">Pondok Pesantren Madani</p>
+            <form id="login-form" class="space-y-4">
+                <input type="text" id="username" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Username" required>
+                <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Password" required>
+                <button type="submit" class="w-full py-3 btn-primary rounded-lg font-semibold shadow-lg">Masuk</button>
+            </form>
         </div>
     </div>
 
-    <div id="app-content" class="flex h-screen overflow-hidden hidden">
-        <!-- SIDEBAR -->
-        <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-30">
-            <div class="p-6 flex items-center gap-3 shrink-0">
-                <div id="sidebar-logo" class="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center text-white shrink-0">
-                    <i class="fas fa-mosque"></i>
-                </div>
-                <span class="font-bold text-xl logo-text truncate" id="display-pondok">E-Santri</span>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-white border-r h-full flex flex-col transition-all duration-300 z-50">
+        <div class="p-6 flex items-center gap-3 border-b h-20">
+            <div class="w-10 h-10 bg-emerald-600 flex items-center justify-center rounded-lg text-white">
+                <i class="fas fa-quran text-xl"></i>
             </div>
-
-            <nav id="sidebar-nav" class="flex-1 px-4 space-y-1 overflow-y-auto">
-                <!-- Nav items generated by JS based on roles -->
-            </nav>
-
-            <div class="p-4 border-t border-gray-100 space-y-2">
-                <button id="btn-sync" onclick="manualSync()" class="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg">
-                    <i class="fas fa-sync-alt"></i> <span id="sync-text">Sync Manual</span>
-                </button>
-                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg">
-                    <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
-                </button>
-            </div>
-        </aside>
-
-        <!-- MAIN CONTENT -->
-        <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
-                <div class="flex items-center gap-4">
-                    <button id="toggle-sidebar" class="text-gray-400 hover:text-green-600"><i class="fas fa-bars"></i></button>
-                    <h2 id="page-title" class="text-lg font-bold">Dashboard</h2>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div id="online-status" class="w-3 h-3 rounded-full bg-green-500"></div>
-                    <div class="text-right hidden md:block">
-                        <p id="user-display-name" class="text-sm font-bold">User</p>
-                        <p id="user-display-role" class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Role</p>
-                    </div>
-                </div>
-            </header>
-
-            <div id="main-scroll" class="flex-1 overflow-y-auto p-4 md:p-8">
-                
-                <!-- PAGE: DASHBOARD -->
-                <div id="page-dashboard" class="page-view space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <p class="text-gray-500 text-xs font-bold uppercase">Santri Aktif</p>
-                            <h3 id="dash-total-santri" class="text-3xl font-bold mt-1">0</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <p class="text-gray-500 text-xs font-bold uppercase">Hadir Hari Ini</p>
-                            <h3 id="dash-hadir" class="text-3xl font-bold mt-1 text-green-600">0</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <p class="text-gray-500 text-xs font-bold uppercase">Sedang Izin</p>
-                            <h3 id="dash-izin" class="text-3xl font-bold mt-1 text-orange-500">0</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <p class="text-gray-500 text-xs font-bold uppercase">Terlambat</p>
-                            <h3 id="dash-late" class="text-3xl font-bold mt-1 text-red-500">0</h3>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                            <h4 class="font-bold mb-4">Statistik Gender</h4>
-                            <div class="h-64"><canvas id="chart-gender"></canvas></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                            <h4 class="font-bold mb-4">Aktivitas Terakhir</h4>
-                            <div id="dash-recent-log" class="space-y-3"></div>
-                        </div>
-                    </div>
-                </div>
-
-    <!-- PAGE: DATA SANTRI -->
-    <div id="page-santri" class="page-view space-y-4 max-w-7xl mx-auto">
-        <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-            <div class="flex flex-wrap gap-2">
-                <button onclick="openModal('modal-santri')" class="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-700 action-admin transition-all items-center">
-                    <i class="fas fa-plus mr-2"></i> Tambah Santri
-                </button>
-                <button onclick="document.getElementById('import-file').click()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-100 action-admin transition-all items-center">
-                    <i class="fas fa-file-import mr-2"></i> Import CSV
-                </button>
-                <input type="file" id="import-file" class="hidden" accept=".csv" onchange="importCSV(this)">
-                <button onclick="exportData('all')" class="bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-100 transition-all items-center">
-                    <i class="fas fa-file-export mr-2"></i> Export Semua
+            <span class="font-bold text-xl tracking-tight logo-text">E-Santri<span class="text-emerald-600">Pro</span></span>
+        </div>
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-hide">
+            <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="dashboard">
+                <i class="fas fa-home w-5"></i><span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('santri')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="santri">
+                <i class="fas fa-users w-5"></i><span>Data Santri</span>
+            </button>
+            <button onclick="switchTab('perizinan')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="perizinan">
+                <i class="fas fa-id-card-clip w-5"></i><span>Perizinan</span>
+            </button>
+            <button onclick="switchTab('pelanggaran')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="pelanggaran">
+                <i class="fas fa-exclamation-triangle w-5"></i><span>Pelanggaran</span>
+            </button>
+            <div id="admin-nav" class="hidden">
+                <button onclick="switchTab('pengaturan')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="pengaturan">
+                    <i class="fas fa-cog w-5"></i><span>Pengaturan</span>
                 </button>
             </div>
+        </nav>
+        <div class="p-4 border-t">
+            <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                <i class="fas fa-sign-out-alt w-5"></i><span>Keluar</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden">
+        <!-- Header -->
+        <header class="h-20 bg-white border-b px-8 flex items-center justify-between z-40">
+            <div class="flex items-center gap-4">
+                <h2 id="page-title" class="text-xl font-bold text-slate-800">Perizinan</h2>
+            </div>
+            <div class="flex items-center gap-3 text-right">
+                <div>
+                    <p id="user-display" class="text-sm font-bold">Admin</p>
+                    <p id="pondok-display" class="text-[10px] text-emerald-600 font-bold uppercase">Pesantren Madani</p>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-area" class="flex-1 overflow-y-auto p-8 scrollbar-hide">
             
-            <div id="bulk-actions" class="hidden flex items-center gap-2 bg-orange-50 p-2 rounded-xl border border-orange-100">
-                <span id="bulk-count" class="text-xs font-bold text-orange-700 px-2">0 Dipilih</span>
-                <select id="bulk-select" onchange="handleBulkAction(this.value)" class="text-xs border-none bg-transparent font-bold text-orange-800 outline-none cursor-pointer">
-                    <option value="">-- Aksi Massal --</option>
-                    <option value="export">Export Filtered</option>
-                    <option value="naik">Naik Kelas</option>
-                    <option value="khidmah">Set Khidmah</option>
-                    <option value="alumni" class="action-admin">Set Alumni</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- FILTERS -->
-        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm grid grid-cols-2 md:grid-cols-5 gap-4">
-            <input type="text" id="f-search" onkeyup="renderTableSantri()" placeholder="Cari Nama/ID..." class="px-4 py-2 border rounded-xl text-sm outline-none col-span-2 md:col-span-1 focus:border-green-500">
-            <select id="f-asrama" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none focus:border-green-500">
-                <option value="">Semua Asrama</option>
-                <option value="Sunan Ampel">Sunan Ampel</option>
-                <option value="Sunan Giri">Sunan Giri</option>
-                <option value="Siti Khadijah">Siti Khadijah</option>
-                <option value="Siti Aisyah">Siti Aisyah</option>
-            </select>
-            <select id="f-sekolah" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none focus:border-green-500">
-                <option value="">Semua Sekolah</option>
-                <option value="MI">MI</option>
-                <option value="MTs">MTs</option>
-                <option value="MA">MA</option>
-            </select>
-            <select id="f-kelas" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none focus:border-green-500">
-                <option value="">Semua Kelas</option>
-                <option value="7">Kelas 7</option>
-                <option value="8">Kelas 8</option>
-                <option value="9">Kelas 9</option>
-                <option value="10">Kelas 10</option>
-                <option value="11">Kelas 11</option>
-                <option value="12">Kelas 12</option>
-            </select>
-            <select id="f-gender" onchange="renderTableSantri()" class="px-4 py-2 border rounded-xl text-sm outline-none focus:border-green-500">
-                <option value="">Semua Gender</option>
-                <option value="Laki-laki">Laki-laki</option>
-                <option value="Perempuan">Perempuan</option>
-            </select>
-        </div>
-
-        <!-- TABLE -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-50 text-[10px] uppercase font-bold text-gray-500 tracking-wider">
-                    <tr>
-                        <th class="px-6 py-4 w-10"><input type="checkbox" id="check-all" onclick="toggleCheckAll(this)" class="rounded text-green-600 focus:ring-green-500"></th>
-                        <th class="px-6 py-4">ID</th>
-                        <th class="px-6 py-4">Nama Santri</th>
-                        <th class="px-6 py-4">Status</th>
-                        <th class="px-6 py-4">Asrama</th>
-                        <th class="px-6 py-4">Kelas</th>
-                        <th class="px-6 py-4 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="table-santri-body" class="divide-y divide-gray-100 text-sm font-medium">
-                    <!-- Data will be injected here -->
-                </tbody>
-            </table>
-            <div id="empty-state" class="hidden py-20 text-center">
-                <i class="fas fa-user-slash text-4xl text-gray-200 mb-4"></i>
-                <p class="text-gray-400">Data santri tidak ditemukan</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- PAGE: PERIZINAN (KONTEN UTAMA) -->
-    <div id="page-perizinan" class="space-y-6 max-w-7xl mx-auto">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div class="flex flex-col md:flex-row justify-between gap-4 mb-8">
-                <div class="flex p-1 bg-gray-100 rounded-xl self-start overflow-x-auto max-w-full">
-                    <button onclick="toggleIzinMode('biasa')" id="tab-izin-biasa" class="whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600 transition-all">
-                        <i class="fas fa-walking mr-2"></i>Izin Biasa
-                    </button>
-                    <button onclick="toggleIzinMode('libur')" id="tab-izin-libur" class="whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 transition-all">
-                        <i class="fas fa-home mr-2"></i>Libur Panjang
-                    </button>
-                    <button onclick="toggleIzinMode('checkin')" id="tab-izin-checkin" class="whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 transition-all">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Check In
-                    </button>
+            <!-- Dashboard -->
+            <section id="tab-dashboard" class="tab-content hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-6 rounded-2xl border">
+                        <p class="text-xs font-bold text-slate-400 mb-1">TOTAL SANTRI</p>
+                        <h3 class="text-2xl font-bold" id="dash-total">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border">
+                        <p class="text-xs font-bold text-slate-400 mb-1">SEDANG IZIN</p>
+                        <h3 class="text-2xl font-bold text-orange-500" id="dash-izin">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border">
+                        <p class="text-xs font-bold text-slate-400 mb-1">TOTAL POIN</p>
+                        <h3 class="text-2xl font-bold text-red-600" id="dash-poin">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border">
+                        <p class="text-xs font-bold text-slate-400 mb-1">PENGGUNA</p>
+                        <h3 class="text-2xl font-bold text-blue-600" id="dash-user">0</h3>
+                    </div>
                 </div>
-            </div>
+                <div class="bg-white p-6 rounded-2xl border h-96">
+                    <canvas id="kamarChart"></canvas>
+                </div>
+            </section>
 
-            <!-- SCANNER SECTION -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div class="space-y-6">
-                    <div id="qr-reader" class="w-full rounded-3xl overflow-hidden bg-gray-900 aspect-video flex items-center justify-center text-gray-500 relative border-4 border-white shadow-xl">
+            <!-- Perizinan -->
+            <section id="tab-perizinan" class="tab-content space-y-8">
+                <!-- Opsi Tombol Utama -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <button onclick="openIzinModal('biasa')" class="group bg-white p-6 rounded-2xl border hover:border-orange-500 hover:shadow-xl transition-all flex flex-col items-center gap-4">
+                        <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            <i class="fas fa-walking"></i>
+                        </div>
                         <div class="text-center">
-                            <i class="fas fa-camera text-4xl mb-3 block"></i>
-                            <p class="text-xs font-bold uppercase tracking-widest">Kamera Siap</p>
+                            <h4 class="font-bold text-lg">Izin Biasa</h4>
+                            <p class="text-xs text-slate-400">Scan NIS / Input Manual</p>
                         </div>
-                    </div>
-                    
-                    <div class="flex gap-3">
-                        <button onclick="startScanner()" class="flex-1 bg-green-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-green-100 hover:bg-green-700 transition-all transform active:scale-95" id="btn-scan-main">
-                            Mulai Scanning
-                        </button>
-                        <button onclick="stopScanner()" class="px-6 border-2 border-gray-100 rounded-2xl text-gray-400 hover:text-red-500 hover:border-red-50 transition-all">
-                            <i class="fas fa-power-off"></i>
-                        </button>
-                    </div>
-
-                    <div id="izin-form-inputs" class="bg-gray-50 p-6 rounded-3xl space-y-4 border border-gray-100">
-                        <!-- Fields Izin Biasa -->
-                        <div id="fields-biasa" class="grid grid-cols-2 gap-4">
-                            <div class="col-span-2">
-                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Alasan Keluar</label>
-                                <input type="text" id="biasa-alasan" placeholder="Contoh: Beli kitab, berobat..." class="w-full px-4 py-3 border-2 border-transparent bg-white rounded-xl text-sm outline-none focus:border-green-500 transition-all shadow-sm">
-                            </div>
-                            <div class="col-span-2">
-                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Batas Kembali</label>
-                                <input type="datetime-local" id="biasa-deadline" class="w-full px-4 py-3 border-2 border-transparent bg-white rounded-xl text-sm outline-none focus:border-green-500 transition-all shadow-sm">
-                            </div>
+                    </button>
+                    <button onclick="openIzinModal('libur')" class="group bg-white p-6 rounded-2xl border hover:border-blue-500 hover:shadow-xl transition-all flex flex-col items-center gap-4">
+                        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            <i class="fas fa-plane-departure"></i>
                         </div>
-
-                        <!-- Fields Libur Panjang -->
-                        <div id="fields-libur" class="hidden grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Mulai Libur</label>
-                                <input type="date" id="libur-start" class="w-full px-4 py-3 border-2 border-transparent bg-white rounded-xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Selesai Libur</label>
-                                <input type="date" id="libur-end" class="w-full px-4 py-3 border-2 border-transparent bg-white rounded-xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm">
-                            </div>
+                        <div class="text-center">
+                            <h4 class="font-bold text-lg">Libur Panjang</h4>
+                            <p class="text-xs text-slate-400">Masa Liburan Massal</p>
                         </div>
-
-                        <!-- Fields Check In -->
-                        <div id="fields-checkin" class="hidden">
-                            <div class="bg-purple-600 p-4 rounded-2xl text-white shadow-lg shadow-purple-100">
-                                <p class="text-[10px] font-bold uppercase mb-1 opacity-80 flex items-center">
-                                    <i class="fas fa-info-circle mr-1"></i> Mode Check In Otomatis
-                                </p>
-                                <p class="text-xs font-medium leading-tight">Gunakan mode ini saat santri kembali ke asrama. Data kehadiran akan langsung diperbarui.</p>
-                            </div>
+                    </button>
+                    <button onclick="openIzinModal('checkin')" class="group bg-white p-6 rounded-2xl border hover:border-emerald-500 hover:shadow-xl transition-all flex flex-col items-center gap-4">
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            <i class="fas fa-user-check"></i>
                         </div>
-
-                        <div class="relative pt-2">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1 tracking-wider">Manual ID Santri</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="manual-nis" placeholder="ID Santri..." class="flex-1 px-4 py-3 border-2 border-transparent bg-white rounded-xl outline-none focus:border-gray-800 transition-all font-mono font-bold shadow-sm" onkeypress="if(event.key === 'Enter') processIzin(this.value)">
-                                <button id="btn-proses-manual" onclick="processIzin(document.getElementById('manual-nis').value)" class="bg-gray-800 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-200">
-                                    Proses
-                                </button>
-                            </div>
+                        <div class="text-center">
+                            <h4 class="font-bold text-lg">Check-In</h4>
+                            <p class="text-xs text-slate-400">Kembali ke Pondok</p>
                         </div>
-                    </div>
+                    </button>
                 </div>
 
-                <div class="flex flex-col h-full space-y-4">
-                    <div id="izin-mode-indicator" class="p-6 bg-green-50 border border-green-100 rounded-3xl transition-all shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <div id="mode-icon-container" class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-green-600 shadow-sm border border-green-100">
-                                <i class="fas fa-walking text-xl" id="mode-icon-display"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-extrabold text-green-800" id="mode-title">Izin Keluar Biasa</h4>
-                                <p class="text-xs text-green-600" id="mode-desc">Santri keluar untuk keperluan jangka pendek.</p>
-                            </div>
-                        </div>
+                <!-- Log Perizinan -->
+                <div class="bg-white rounded-2xl border overflow-hidden">
+                    <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                        <h4 class="font-bold text-sm uppercase">Riwayat Aktivitas</h4>
+                        <button onclick="exportData('izin')" class="text-xs font-bold text-emerald-600">Export CSV</button>
                     </div>
-
-                    <div class="bg-white rounded-3xl p-6 flex-1 border border-gray-100 shadow-inner flex flex-col max-h-[500px]">
-                        <div class="flex items-center justify-between mb-4">
-                            <h5 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Log Aktivitas Terbaru</h5>
-                            <button onclick="clearLog()" class="text-[9px] font-bold text-gray-400 hover:text-red-500 uppercase">Hapus Semua</button>
-                        </div>
-                        <div id="izin-status-log" class="space-y-3 flex-1 overflow-y-auto pr-2">
-                            <div id="log-placeholder" class="text-center py-20">
-                                <i class="fas fa-qrcode text-4xl text-gray-100 mb-3 block"></i>
-                                <p class="text-gray-300 text-xs italic">Menunggu pemindaian atau input manual...</p>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="divide-y max-h-[400px] overflow-y-auto" id="log-izin"></div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </section>
 
-    <script>
-        const state = {
-            santri: [
-                { id: '24001', nama: 'Zaidan Al-Fatih', status: 'Aktif', asrama: 'Sunan Ampel' },
-                { id: '24002', nama: 'Aisyah Humaira', status: 'Aktif', asrama: 'Siti Khadijah' },
-                { id: '24003', nama: 'Rizky Ramadhan', status: 'Aktif', asrama: 'Sunan Giri' },
-                { id: '24004', nama: 'Fatimah Az-Zahra', status: 'Khidmah', asrama: 'Siti Aisyah' },
-                { id: '24005', nama: 'Muhammad Ghufron', status: 'Aktif', asrama: 'Sunan Ampel' },
-            ],
-            izinMode: 'biasa',
-            scannerActive: false
-        };
-
-        function toggleIzinMode(mode) {
-            state.izinMode = mode;
-            const tabs = {
-                biasa: document.getElementById('tab-izin-biasa'),
-                libur: document.getElementById('tab-izin-libur'),
-                checkin: document.getElementById('tab-izin-checkin')
-            };
-            const indicator = document.getElementById('izin-mode-indicator');
-            const title = document.getElementById('mode-title');
-            const desc = document.getElementById('mode-desc');
-            const iconDisplay = document.getElementById('mode-icon-display');
-            const iconContainer = document.getElementById('mode-icon-container');
-            const btnScan = document.getElementById('btn-scan-main');
-            
-            const fields = {
-                biasa: document.getElementById('fields-biasa'),
-                libur: document.getElementById('fields-libur'),
-                checkin: document.getElementById('fields-checkin')
-            };
-
-            // Reset tabs styling
-            Object.values(tabs).forEach(tab => {
-                if(tab) tab.className = "whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 transition-all";
-            });
-
-            // Hide all fields
-            Object.values(fields).forEach(f => {
-                if(f) f.classList.add('hidden');
-            });
-
-            if (mode === 'biasa') {
-                tabs.biasa.className = "whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600";
-                indicator.className = "p-6 bg-green-50 border border-green-100 rounded-3xl transition-all shadow-sm";
-                title.innerText = "Izin Keluar Biasa";
-                title.className = "font-extrabold text-green-800";
-                desc.innerText = "Santri keluar untuk keperluan jangka pendek.";
-                desc.className = "text-xs text-green-600";
-                iconDisplay.className = "fas fa-walking text-xl";
-                iconContainer.className = "w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-green-600 shadow-sm border border-green-100";
-                btnScan.className = "flex-1 bg-green-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-green-100 hover:bg-green-700 transition-all transform active:scale-95";
-                fields.biasa.classList.remove('hidden');
-            } else if (mode === 'libur') {
-                tabs.libur.className = "whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold bg-white shadow-sm text-blue-600";
-                indicator.className = "p-6 bg-blue-50 border border-blue-100 rounded-3xl transition-all shadow-sm";
-                title.innerText = "Libur Panjang";
-                title.className = "font-extrabold text-blue-800";
-                desc.innerText = "Masa liburan resmi pesantren.";
-                desc.className = "text-xs text-blue-600";
-                iconDisplay.className = "fas fa-home text-xl";
-                iconContainer.className = "w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-blue-600 shadow-sm border border-blue-100";
-                btnScan.className = "flex-1 bg-blue-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all transform active:scale-95";
-                fields.libur.classList.remove('hidden');
-            } else if (mode === 'checkin') {
-                tabs.checkin.className = "whitespace-nowrap px-6 py-2.5 rounded-lg text-sm font-bold bg-white shadow-sm text-purple-600";
-                indicator.className = "p-6 bg-purple-50 border border-purple-100 rounded-3xl transition-all shadow-sm";
-                title.innerText = "Check In (Kembali)";
-                title.className = "font-extrabold text-purple-800";
-                desc.innerText = "Santri kembali masuk ke area pesantren.";
-                desc.className = "text-xs text-purple-600";
-                iconDisplay.className = "fas fa-sign-in-alt text-xl";
-                iconContainer.className = "w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-purple-600 shadow-sm border border-purple-100";
-                btnScan.className = "flex-1 bg-purple-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-purple-100 hover:bg-purple-700 transition-all transform active:scale-95";
-                fields.checkin.classList.remove('hidden');
-            }
-            
-            if(state.scannerActive) {
-                stopScanner();
-                startScanner();
-            }
-        }
-
-        function startScanner() {
-            if (state.scannerActive) return;
-            state.scannerActive = true;
-            const reader = document.getElementById('qr-reader');
-            const scanClass = state.izinMode === 'checkin' ? 'checkin-anim' : 'scan-anim';
-            reader.classList.add(scanClass);
-            reader.innerHTML = `
-                <div class="z-10 bg-black/70 px-6 py-3 rounded-full text-white text-[10px] font-black animate-pulse uppercase tracking-[0.2em]">
-                    Scanner ${state.izinMode.toUpperCase()} Aktif
+            <!-- Santri & Pelanggaran tetap ada (disingkat untuk fokus pada request) -->
+            <section id="tab-santri" class="tab-content hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <input type="text" id="src-santri" oninput="renderSantri()" placeholder="Cari NIS/Nama..." class="px-4 py-2 border rounded-xl w-1/3">
+                    <button onclick="openModal('modal-santri')" class="btn-primary px-6 py-2 rounded-xl font-bold">Tambah Santri</button>
                 </div>
-                <div class="absolute inset-4 border-2 border-white/20 rounded-2xl"></div>
-            `;
-        }
-
-        function stopScanner() {
-            state.scannerActive = false;
-            const reader = document.getElementById('qr-reader');
-            reader.classList.remove('scan-anim', 'checkin-anim');
-            reader.innerHTML = `
-                <div class="text-center">
-                    <i class="fas fa-camera text-4xl mb-3 block"></i>
-                    <p class="text-xs font-bold uppercase tracking-widest text-gray-700">Kamera Siap</p>
+                <div class="bg-white rounded-2xl border overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 font-bold"><tr><th class="p-4">Santri</th><th class="p-4">NIS</th><th class="p-4">Kamar</th><th class="p-4">Status</th><th class="p-4"></th></tr></thead>
+                        <tbody id="table-santri" class="divide-y"></tbody>
+                    </table>
                 </div>
-            `;
-        }
+            </section>
 
-        function processIzin(id) {
-            if (!id) return;
-            const santri = state.santri.find(s => s.id === id);
-            const log = document.getElementById('izin-status-log');
-            const placeholder = document.getElementById('log-placeholder');
-            
-            if (placeholder) placeholder.remove();
-
-            const entry = document.createElement('div');
-            entry.className = "bg-white p-4 border border-gray-100 rounded-2xl shadow-sm transform transition-all hover:scale-[1.02] border-l-4";
-            
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-            if (santri) {
-                let detailText = "";
-                let iconClass = "bg-green-100 text-green-600";
-                let modeLabel = state.izinMode.toUpperCase();
-
-                if (state.izinMode === 'biasa') {
-                    const alasan = document.getElementById('biasa-alasan').value || "Keperluan mendadak";
-                    const deadline = document.getElementById('biasa-deadline').value;
-                    const deadStr = deadline ? new Date(deadline).toLocaleString('id-ID', {dateStyle: 'short', timeStyle: 'short'}) : "Sesuai Aturan";
-                    entry.classList.add('border-green-500');
-                    detailText = `<div class="mt-2 text-[10px] text-gray-500 bg-gray-50 p-2 rounded-lg italic">Alasan: ${alasan} <br> Batas Kembali: ${deadStr}</div>`;
-                } else if (state.izinMode === 'libur') {
-                    const start = document.getElementById('libur-start').value || "-";
-                    const end = document.getElementById('libur-end').value || "-";
-                    iconClass = "bg-blue-100 text-blue-600";
-                    entry.classList.add('border-blue-500');
-                    detailText = `<div class="mt-2 text-[10px] text-blue-500 bg-blue-50 p-2 rounded-lg font-bold">Periode Libur: ${start} s/d ${end}</div>`;
-                } else if (state.izinMode === 'checkin') {
-                    iconClass = "bg-purple-100 text-purple-600";
-                    modeLabel = "CHECK IN";
-                    entry.classList.add('border-purple-500');
-                    detailText = `<div class="mt-2 text-[10px] text-purple-600 bg-purple-50 p-2 rounded-lg font-bold italic"><i class="fas fa-check-circle mr-1"></i> Santri telah dikonfirmasi kembali di asrama.</div>`;
-                }
-
-                entry.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl ${iconClass} flex items-center justify-center">
-                                <i class="fas fa-check text-sm"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-extrabold text-gray-900 leading-none">${santri.nama}</p>
-                                <p class="text-[9px] text-gray-400 font-bold uppercase mt-1">ID: ${santri.id} • ${modeLabel} • ${santri.asrama}</p>
-                            </div>
-                        </div>
-                        <span class="text-[9px] font-black text-gray-300">${timeStr}</span>
-                    </div>
-                    ${detailText}
-                `;
-            } else {
-                entry.classList.add('border-red-500');
-                entry.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
-                                <i class="fas fa-times text-sm"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-extrabold text-red-600 leading-none">ID Tidak Terdaftar</p>
-                                <p class="text-[9px] text-gray-400 font-bold uppercase mt-1">Input: ${id}</p>
-                            </div>
-                        </div>
-                        <span class="text-[9px] font-black text-gray-300">${timeStr}</span>
-                    </div>
-                `;
-            }
-
-            log.prepend(entry);
-            document.getElementById('manual-nis').value = '';
-        }
-
-        function clearLog() {
-            const log = document.getElementById('izin-status-log');
-            log.innerHTML = `
-                <div id="log-placeholder" class="text-center py-20">
-                    <i class="fas fa-qrcode text-4xl text-gray-100 mb-3 block"></i>
-                    <p class="text-gray-300 text-xs italic">Log telah dibersihkan...</p>
-                </div>
-            `;
-        }
-
-        function updateClock() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const clockEl = document.getElementById('clock');
-            if(clockEl) clockEl.innerText = timeStr;
-        }
-
-        window.onload = () => {
-            setInterval(updateClock, 1000);
-            updateClock();
-            
-            const liburStart = document.getElementById('libur-start');
-            if (liburStart) {
-                liburStart.value = new Date().toISOString().split('T')[0];
-            }
-        };
-                <!-- PAGE: PENGATURAN -->
-                <div id="page-pengaturan" class="page-view hidden space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                            <h3 class="font-bold border-b pb-2">Identitas Pesantren</h3>
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="text-xs font-bold text-gray-400">Nama Pesantren</label>
-                                    <input type="text" id="set-pondok-name" class="w-full px-4 py-2 border rounded-xl mt-1 outline-none">
-                                </div>
-                                <button onclick="saveSettings()" class="w-full bg-green-600 text-white py-2 rounded-xl font-bold">Simpan Perubahan</button>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                            <h3 class="font-bold border-b pb-2">Daftar Asrama</h3>
-                            <div class="flex gap-2">
-                                <input type="text" id="new-asrama" placeholder="Nama Asrama Baru..." class="flex-1 px-4 py-2 border rounded-xl outline-none text-sm">
-                                <button onclick="addAsrama()" class="bg-gray-800 text-white px-4 py-2 rounded-xl"><i class="fas fa-plus"></i></button>
-                            </div>
-                            <div id="asrama-list-ui" class="space-y-2 max-h-40 overflow-y-auto"></div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </main>
-    </div>
-
-    <!-- MODAL SANTRI -->
-    <div id="modal-santri" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl scale-in">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h3 class="font-bold text-xl">Tambah Santri Baru</h3>
-                <button onclick="closeModal('modal-santri')" class="text-gray-400"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase">Field Wajib</label>
-                    <div class="space-y-3 mt-2">
-                        <input type="text" id="s-nama" placeholder="Nama Lengkap Santri" class="w-full px-4 py-2 border rounded-xl outline-none">
-                        <div class="grid grid-cols-2 gap-3">
-                            <select id="s-gender" class="px-4 py-2 border rounded-xl"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select>
-                            <select id="s-asrama" class="px-4 py-2 border rounded-xl"></select>
-                            <select id="s-sekolah" onchange="updateKelasSelect('s-kelas', this.value)" class="px-4 py-2 border rounded-xl">
-                                <option value="MI">MI</option><option value="MTs">MTs</option><option value="MA">MA</option>
+            <!-- Pelanggaran -->
+            <section id="tab-pelanggaran" class="tab-content hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border h-fit">
+                        <h4 class="font-bold mb-4 uppercase text-xs">Input Pelanggaran</h4>
+                        <form id="form-pelanggaran" class="space-y-3">
+                            <select id="p-sid" class="w-full p-2 border rounded-lg text-sm" required></select>
+                            <select id="p-tipe" class="w-full p-2 border rounded-lg text-sm" required>
+                                <option value="Ringan">Ringan (5)</option>
+                                <option value="Sedang">Sedang (25)</option>
+                                <option value="Berat">Berat (100)</option>
                             </select>
-                            <select id="s-kelas" class="px-4 py-2 border rounded-xl"></select>
+                            <textarea id="p-ket" placeholder="Keterangan..." class="w-full p-2 border rounded-lg text-sm h-24"></textarea>
+                            <button class="w-full py-2 bg-red-600 text-white font-bold rounded-lg">SIMPAN</button>
+                        </form>
+                    </div>
+                    <div class="md:col-span-2 bg-white rounded-2xl border overflow-hidden">
+                         <div class="p-4 border-b flex justify-between bg-slate-50">
+                            <h4 class="font-bold text-xs uppercase">Daftar Pelanggaran</h4>
+                            <button onclick="exportData('pelanggaran')" class="text-xs text-red-600 font-bold">Export</button>
+                         </div>
+                         <table class="w-full text-left text-sm">
+                             <thead class="bg-slate-50"><tr><th class="p-3">Santri</th><th class="p-3">Tipe</th><th class="p-3">Poin</th><th class="p-3">Tanggal</th></tr></thead>
+                             <tbody id="table-pelanggaran" class="divide-y"></tbody>
+                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pengaturan -->
+            <section id="tab-pengaturan" class="tab-content hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border">
+                        <h4 class="font-bold mb-4 uppercase text-xs">Profil Pesantren</h4>
+                        <input type="text" id="set-pondok" class="w-full p-2 border rounded-lg mb-3">
+                        <button onclick="saveSettings()" class="px-6 py-2 btn-primary rounded-lg font-bold">Simpan</button>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border">
+                        <h4 class="font-bold mb-4 uppercase text-xs">Manajemen User</h4>
+                        <form id="form-user" class="flex gap-2 mb-4">
+                            <input type="text" id="u-name" placeholder="User" class="flex-1 p-2 border rounded-lg text-sm">
+                            <input type="password" id="u-pass" placeholder="Pass" class="flex-1 p-2 border rounded-lg text-sm">
+                            <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg"><i class="fas fa-plus"></i></button>
+                        </form>
+                        <div id="list-user" class="space-y-2"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal Smart Perizinan (Izin Biasa / Libur / Checkin) -->
+    <div id="modal-smart-izin" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl scale-in">
+            <div id="smart-header" class="px-6 py-4 flex justify-between items-center text-white">
+                <h4 id="smart-title" class="font-bold">Form Perizinan</h4>
+                <button onclick="closeSmartModal()"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <!-- Global Scanner Area -->
+                <div id="scanner-container" class="hidden space-y-3">
+                    <div id="reader-global" class="rounded-2xl overflow-hidden bg-black aspect-video"></div>
+                    <p class="text-[10px] text-center text-slate-400 font-bold uppercase">Arahkan Kamera ke Barcode/QR NIS Santri</p>
+                </div>
+
+                <div id="smart-form-container">
+                    <!-- Dinamis Konten -->
+                    <div class="space-y-4">
+                        <div class="flex gap-2">
+                            <input type="text" id="sm-nis" placeholder="NIS Santri" class="flex-1 px-4 py-3 border rounded-xl font-bold text-emerald-700 bg-emerald-50 outline-none focus:ring-2 focus:ring-emerald-500">
+                            <button onclick="toggleScanner()" class="px-4 bg-slate-800 text-white rounded-xl shadow-lg"><i class="fas fa-camera"></i></button>
+                        </div>
+                        <div id="sm-info" class="p-3 bg-slate-50 rounded-xl text-xs font-semibold text-slate-500 hidden"></div>
+                        
+                        <!-- Area Izin Biasa -->
+                        <div id="area-biasa" class="hidden space-y-4">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">TGL KELUAR</label><input type="date" id="sm-tgl-out" class="w-full p-2 border rounded-lg text-sm"></div>
+                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">JAM KELUAR</label><input type="time" id="sm-jam-out" class="w-full p-2 border rounded-lg text-sm"></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">BATAS KEMBALI</label><input type="date" id="sm-tgl-in" class="w-full p-2 border rounded-lg text-sm"></div>
+                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">JAM KEMBALI</label><input type="time" id="sm-jam-in" class="w-full p-2 border rounded-lg text-sm"></div>
+                            </div>
+                            <textarea id="sm-alasan" placeholder="Alasan Izin..." class="w-full p-3 border rounded-xl text-sm h-20"></textarea>
+                        </div>
+
+                        <!-- Area Libur -->
+                        <div id="area-libur" class="hidden space-y-4">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">MULAI</label><input type="date" id="lib-start" class="w-full p-2 border rounded-lg text-sm"></div>
+                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">BERAKHIR</label><input type="date" id="lib-end" class="w-full p-2 border rounded-lg text-sm"></div>
+                            </div>
+                            <p class="text-[10px] text-blue-500 font-bold bg-blue-50 p-2 rounded italic">Info: Status santri otomatis "Libur" tanpa notifikasi.</p>
+                        </div>
+
+                        <!-- Area Checkin -->
+                        <div id="area-checkin" class="hidden text-center py-4">
+                            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 animate-bounce">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-600">Klik tombol di bawah untuk konfirmasi kembali ke pondok.</p>
                         </div>
                     </div>
                 </div>
-                <div class="pt-4 border-t">
-                    <label class="text-xs font-bold text-gray-400 uppercase">Field Opsional</label>
-                    <div class="space-y-3 mt-2">
-                        <input type="text" id="s-wali" placeholder="Nama Wali" class="w-full px-4 py-2 border rounded-xl outline-none">
-                        <input type="text" id="s-alamat" placeholder="Alamat Lengkap" class="w-full px-4 py-2 border rounded-xl outline-none">
-                        <input type="text" id="s-telp" placeholder="Nomor Telepon Wali" class="w-full px-4 py-2 border rounded-xl outline-none">
-                    </div>
-                </div>
-            </div>
-            <div class="p-6 bg-gray-50 flex gap-3">
-                <button onclick="closeModal('modal-santri')" class="flex-1 py-3 font-bold text-gray-500">Batal</button>
-                <button onclick="saveSantri()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold">Simpan Data</button>
+                
+                <button id="sm-submit" onclick="processSmartAction()" class="w-full py-4 text-white font-black rounded-2xl shadow-xl transition-transform active:scale-95"></button>
             </div>
         </div>
     </div>
 
-    <!-- REASON MODAL -->
-    <div id="modal-reason" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-in">
-            <h3 class="font-bold text-lg mb-4">Alasan Izin</h3>
-            <div class="space-y-4">
-                <input type="text" id="izin-reason" placeholder="Misal: Berobat, Belanja..." class="w-full px-4 py-3 border rounded-xl outline-none">
-                <div class="flex gap-2">
-                    <button onclick="closeModal('modal-reason')" class="flex-1 py-3 font-bold text-gray-400">Batal</button>
-                    <button id="confirm-izin-btn" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold">Keluarkan</button>
-                </div>
-            </div>
+    <!-- Modal Santri -->
+    <div id="modal-santri" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/50 p-4">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-md">
+            <h4 class="font-bold mb-4">Data Santri Baru</h4>
+            <form id="form-santri" class="space-y-4">
+                <input type="text" id="s-nama" placeholder="Nama Lengkap" class="w-full p-2 border rounded-lg" required>
+                <input type="text" id="s-nis" placeholder="NIS" class="w-full p-2 border rounded-lg" required>
+                <input type="text" id="s-asrama" placeholder="Asrama" class="w-full p-2 border rounded-lg" required>
+                <button class="w-full py-3 btn-primary rounded-xl font-bold">SIMPAN</button>
+            </form>
         </div>
     </div>
+
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-8 py-3 rounded-full shadow-2xl opacity-0 transition-all z-[200]"></div>
 
     <script>
-        // --- DATA & CONFIG ---
-        const DB_KEY = "esantri_db_v3";
+        // Database
         let db = {
-            santri: [],
-            alumni: [],
-            izin: [],
-            users: [
-                { id: 1, user: 'admin', pass: 'admin123', role: 'Admin', status: 'Aktif' },
-                { id: 2, user: 'guru', pass: 'guru123', role: 'Guru', status: 'Aktif' },
-                { id: 3, user: 'pengurus', pass: 'pengurus123', role: 'Pengurus', status: 'Aktif' }
+            santri: [
+                { id: 1, nama: "Ahmad Junaidi", nis: "1001", asrama: "Al-Fatih", status: "Aktif", poin: 0 },
+                { id: 2, nama: "Zainal Arifin", nis: "1002", asrama: "An-Nahl", status: "Aktif", poin: 0 }
             ],
-            settings: {
-                pondok: "E-Santri Indonesia",
-                asrama: ["Asrama Utara", "Asrama Selatan"],
-                izinMode: "biasa" // biasa / libur
-            },
-            pendingSync: []
+            izin: [],
+            pelanggaran: [],
+            users: [{ user: 'admin', pass: '123', role: 'admin' }],
+            settings: { pondok: "Pesantren Madani" }
         };
 
         let currentUser = null;
-        let selectedIds = new Set();
+        let activeIzinType = '';
         let html5QrCode = null;
 
-        // --- CORE LOGIC ---
-        window.onload = function() {
-            const saved = localStorage.getItem(DB_KEY);
+        function saveDB() { localStorage.setItem('esantri_pro_v4', JSON.stringify(db)); }
+        function loadDB() {
+            const saved = localStorage.getItem('esantri_pro_v4');
             if(saved) db = JSON.parse(saved);
-            
-            checkSession();
-            updateOnlineStatus();
-            window.addEventListener('online', updateOnlineStatus);
-            window.addEventListener('offline', updateOnlineStatus);
+        }
+
+        // Logic Auth
+        document.getElementById('login-form').onsubmit = (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const user = db.users.find(x => x.user === u && x.pass === p);
+            if(user) {
+                currentUser = user;
+                sessionStorage.setItem('esantri_session', JSON.stringify(user));
+                document.getElementById('login-page').classList.add('hidden');
+                initApp();
+            } else { showToast("Gagal Login"); }
         };
 
-        function saveDB() {
-            localStorage.setItem(DB_KEY, JSON.stringify(db));
+        function initApp() {
+            loadDB();
+            document.getElementById('user-display').innerText = currentUser.user.toUpperCase();
+            document.getElementById('admin-nav').style.display = currentUser.role === 'admin' ? 'block' : 'none';
+            document.getElementById('pondok-display').innerText = db.settings.pondok;
+            renderSantri();
+            renderIzinLog();
+            renderPelanggaran();
+            renderUsers();
+            initChart();
+            updateDashboard();
+            populateSelects();
         }
 
-        function updateOnlineStatus() {
-            const ind = document.getElementById('online-status');
-            if(!ind) return;
-            ind.className = navigator.onLine ? "w-3 h-3 rounded-full bg-green-500" : "w-3 h-3 rounded-full bg-red-500";
-            if(navigator.onLine && db.pendingSync.length > 0) manualSync();
+        function switchTab(t) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-'+t).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('nav-active'));
+            document.querySelector(`[data-tab="${t}"]`).classList.add('nav-active');
+            document.getElementById('page-title').innerText = t.toUpperCase();
         }
 
-        function checkSession() {
-            const session = sessionStorage.getItem('esantri_session');
-            if(session) {
-                currentUser = JSON.parse(session);
-                loadApp();
+        // SMART MODAL LOGIC
+        function openIzinModal(type) {
+            activeIzinType = type;
+            const modal = document.getElementById('modal-smart-izin');
+            const header = document.getElementById('smart-header');
+            const submit = document.getElementById('sm-submit');
+            
+            // Reset Views
+            document.getElementById('area-biasa').classList.add('hidden');
+            document.getElementById('area-libur').classList.add('hidden');
+            document.getElementById('area-checkin').classList.add('hidden');
+            document.getElementById('sm-info').classList.add('hidden');
+            document.getElementById('sm-nis').value = '';
+            
+            if(type === 'biasa') {
+                document.getElementById('smart-title').innerText = "IZIN BIASA";
+                header.className = "px-6 py-4 flex justify-between items-center text-white bg-orange-500";
+                document.getElementById('area-biasa').classList.remove('hidden');
+                submit.innerText = "PROSES IZIN";
+                submit.className = "w-full py-4 bg-orange-500 text-white font-black rounded-2xl shadow-lg";
+            } else if(type === 'libur') {
+                document.getElementById('smart-title').innerText = "LIBUR PANJANG";
+                header.className = "px-6 py-4 flex justify-between items-center text-white bg-blue-500";
+                document.getElementById('area-libur').classList.remove('hidden');
+                submit.innerText = "PROSES LIBUR";
+                submit.className = "w-full py-4 bg-blue-500 text-white font-black rounded-2xl shadow-lg";
             } else {
-                document.getElementById('login-overlay').classList.remove('hidden');
-                document.getElementById('app-content').classList.add('hidden');
+                document.getElementById('smart-title').innerText = "CHECK-IN SANTRI";
+                header.className = "px-6 py-4 flex justify-between items-center text-white bg-emerald-500";
+                document.getElementById('area-checkin').classList.remove('hidden');
+                submit.innerText = "KONFIRMASI CHECK-IN";
+                submit.className = "w-full py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-lg";
             }
+
+            modal.classList.remove('hidden');
         }
 
-        function handleLogin() {
-            const u = document.getElementById('login-user').value;
-            const p = document.getElementById('login-pass').value;
-            const user = db.users.find(x => x.user === u && x.pass === p);
-            
-            if(user) {
-                if(user.status !== 'Aktif') return alert("Akun Anda dinonaktifkan!");
-                sessionStorage.setItem('esantri_session', JSON.stringify(user));
-                currentUser = user;
-                loadApp();
-            } else {
-                alert("Login gagal! Periksa kembali username & password.");
-            }
+        function closeSmartModal() {
+            stopScanner();
+            document.getElementById('modal-smart-izin').classList.add('hidden');
         }
 
-        function loadApp() {
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('app-content').classList.remove('hidden');
-            document.getElementById('user-display-name').innerText = currentUser.user;
-            document.getElementById('user-display-role').innerText = currentUser.role;
-            document.getElementById('display-pondok').innerText = db.settings.pondok;
-            document.getElementById('login-pondok-name').innerText = db.settings.pondok;
-
-            renderSidebar();
-            initFilters();
-            renderStats();
-            renderAsramaList();
-            showPage('dashboard');
-        }
-
-        function renderSidebar() {
-            const nav = document.getElementById('sidebar-nav');
-            const items = [
-                { id: 'dashboard', icon: 'fa-th-large', label: 'Dashboard', roles: ['Admin', 'Guru', 'Pengurus'] },
-                { id: 'santri', icon: 'fa-user-graduate', label: 'Data Santri', roles: ['Admin', 'Guru'] },
-                { id: 'perizinan', icon: 'fa-id-badge', label: 'Perizinan', roles: ['Admin', 'Pengurus'] },
-                { id: 'pengaturan', icon: 'fa-cog', label: 'Pengaturan', roles: ['Admin'] }
-            ];
-
-            nav.innerHTML = items.filter(i => i.roles.includes(currentUser.role)).map(i => `
-                <button onclick="showPage('${i.id}')" id="nav-${i.id}" class="nav-btn w-full flex items-center gap-4 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-all">
-                    <i class="fas ${i.icon} w-5"></i> <span>${i.label}</span>
-                </button>
-            `).join('');
-        }
-
-        function showPage(id) {
-            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
-            document.getElementById('page-' + id).classList.remove('hidden');
-            
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            const btn = document.getElementById('nav-' + id);
-            if(btn) btn.classList.add('nav-active');
-
-            document.getElementById('page-title').innerText = id === 'dashboard' ? 'Dashboard' : id.charAt(0).toUpperCase() + id.slice(1);
-            
-            if(id === 'santri') renderTableSantri();
-            if(id === 'pengaturan') {
-                document.getElementById('set-pondok-name').value = db.settings.pondok;
-                renderAsramaList();
-            }
-            if(id === 'perizinan') renderIzinLog();
-            
-            if(html5QrCode && id !== 'perizinan') stopScanner();
-        }
-
-        // --- SANTRI LOGIC ---
-        function generateAutoId() {
-            const ids = db.santri.map(s => parseInt(s.id));
-            const max = ids.length > 0 ? Math.max(...ids) : 999;
-            return max + 1;
-        }
-
-        function saveSantri() {
-            const nama = document.getElementById('s-nama').value;
-            const gender = document.getElementById('s-gender').value;
-            const asrama = document.getElementById('s-asrama').value;
-            const sekolah = document.getElementById('s-sekolah').value;
-            const kelas = document.getElementById('s-kelas').value;
-
-            if(!nama || !asrama || !sekolah || !kelas) return alert("Mohon isi semua field wajib!");
-
-            const newSantri = {
-                id: generateAutoId(),
-                nama, gender, asrama, sekolah, kelas,
-                wali: document.getElementById('s-wali').value || "-",
-                alamat: document.getElementById('s-alamat').value || "-",
-                telp: document.getElementById('s-telp').value || "-",
-                status: 'Santri',
-                createdAt: new Date().toISOString(),
-                sync: navigator.onLine ? 'Synced' : 'Pending'
-            };
-
-            db.santri.push(newSantri);
-            if(!navigator.onLine) db.pendingSync.push({ action: 'CREATE', data: newSantri });
-            
-            saveDB();
-            closeModal('modal-santri');
-            renderTableSantri();
-            renderStats();
-            alert("Santri berhasil ditambahkan dengan ID: " + newSantri.id);
-        }
-
-        function renderTableSantri() {
-            const tbody = document.getElementById('table-santri-body');
-            const s = document.getElementById('f-search').value.toLowerCase();
-            const a = document.getElementById('f-asrama').value;
-            const sk = document.getElementById('f-sekolah').value;
-            const kl = document.getElementById('f-kelas').value;
-            const gn = document.getElementById('f-gender').value;
-
-            const filtered = db.santri.filter(x => 
-                (x.nama.toLowerCase().includes(s) || x.id.toString().includes(s)) &&
-                (a === "" || x.asrama === a) &&
-                (sk === "" || x.sekolah === sk) &&
-                (kl === "" || x.kelas === kl) &&
-                (gn === "" || x.gender === gn)
-            );
-
-            tbody.innerHTML = filtered.map(x => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4"><input type="checkbox" value="${x.id}" class="row-check" onchange="updateSelected(this)"></td>
-                    <td class="px-6 py-4 font-mono text-xs">${x.id}</td>
-                    <td class="px-6 py-4">
-                        <div>${x.nama}</div>
-                        <div class="text-[10px] text-gray-400">${x.gender}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="text-[10px] font-bold px-2 py-1 rounded-full ${x.status === 'Santri' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}">
-                            ${x.status}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-xs">${x.asrama}</td>
-                    <td class="px-6 py-4 text-xs">${x.sekolah} - Kelas ${x.kelas}</td>
-                    <td class="px-6 py-4 text-right">
-                        ${x.sync === 'Pending' ? '<span class="status-pending mr-2">PENDING</span>' : ''}
-                        <button onclick="deleteSantri(${x.id})" class="text-red-400 action-admin"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-            
-            if(currentUser.role !== 'Admin') document.querySelectorAll('.action-admin').forEach(el => el.classList.add('hidden'));
-        }
-
-        function deleteSantri(id) {
-            if(!confirm("Hapus data santri ini?")) return;
-            db.santri = db.santri.filter(x => x.id != id);
-            saveDB(); renderTableSantri(); renderStats();
-        }
-
-        // --- BULK ACTION LOGIC ---
-        function handleBulkAction(val) {
-            if(!val || selectedIds.size === 0) return;
-            
-            if(val === 'naik') {
-                if(!confirm(`Naikkan kelas untuk ${selectedIds.size} santri?`)) return;
-                db.santri.forEach(s => {
-                    if(selectedIds.has(s.id.toString())) {
-                        processNaikKelas(s);
-                    }
+        // Scanner Logic
+        async function toggleScanner() {
+            const container = document.getElementById('scanner-container');
+            if(container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                html5QrCode = new Html5Qrcode("reader-global");
+                await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+                    document.getElementById('sm-nis').value = txt;
+                    lookupSantri(txt);
+                    stopScanner();
                 });
-            } else if(val === 'alumni') {
-                if(!confirm(`Set ${selectedIds.size} santri sebagai Alumni?`)) return;
-                const now = new Date().toLocaleDateString('id-ID');
-                db.santri = db.santri.filter(s => {
-                    if(selectedIds.has(s.id.toString())) {
-                        db.alumni.push({ ...s, tanggalAlumni: now });
-                        return false;
-                    }
-                    return true;
-                });
-            } else if(val === 'khidmah') {
-                db.santri.forEach(s => { if(selectedIds.has(s.id.toString())) s.status = 'Khidmah'; });
-            } else if(val === 'export') {
-                exportData('filtered');
-            }
-
-            saveDB();
-            selectedIds.clear();
-            updateBulkUI();
-            renderTableSantri();
-            renderStats();
-            document.getElementById('bulk-select').value = "";
-        }
-
-        function processNaikKelas(s) {
-            const k = parseInt(s.kelas);
-            if(s.sekolah === 'MI') {
-                if(k < 6) s.kelas = (k + 1).toString();
-                else { s.sekolah = 'MTs'; s.kelas = '1'; }
-            } else if(s.sekolah === 'MTs') {
-                if(k < 3) s.kelas = (k + 1).toString();
-                else { s.sekolah = 'MA'; s.kelas = '1'; }
-            } else if(s.sekolah === 'MA') {
-                if(k < 3) s.kelas = (k + 1).toString();
-                else { s.status = 'Khidmah'; }
-            }
-        }
-
-        // --- PERIZINAN SCANNER ---
-        function toggleIzinMode(mode) {
-            db.settings.izinMode = mode;
-            const bBtn = document.getElementById('tab-izin-biasa');
-            const lBtn = document.getElementById('tab-izin-libur');
-            const mTitle = document.getElementById('mode-title');
-            const mDesc = document.getElementById('mode-desc');
-            const mInd = document.getElementById('izin-mode-indicator');
-
-            if(mode === 'biasa') {
-                bBtn.className = "px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-green-600";
-                lBtn.className = "px-6 py-2 rounded-lg text-sm font-bold text-gray-500";
-                mTitle.innerText = "Mode: Izin Keluar Biasa";
-                mDesc.innerText = "Santri keluar untuk keperluan jangka pendek (belanja, berobat, dll).";
-                mInd.className = "p-4 bg-green-50 border border-green-100 rounded-2xl";
             } else {
-                lBtn.className = "px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-blue-600";
-                bBtn.className = "px-6 py-2 rounded-lg text-sm font-bold text-gray-500";
-                mTitle.innerText = "Mode: Libur Panjang";
-                mDesc.innerText = "Mode khusus kepulangan santri secara serentak (Libur Semester/Hari Raya).";
-                mInd.className = "p-4 bg-blue-50 border border-blue-100 rounded-2xl";
+                stopScanner();
             }
-            saveDB();
-        }
-
-        function startScanner() {
-            html5QrCode = new Html5Qrcode("qr-reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                processIzin(text);
-            }).catch(err => alert("Kamera Error: " + err));
         }
 
         function stopScanner() {
             if(html5QrCode) {
-                html5QrCode.stop().then(() => html5QrCode = null);
+                html5QrCode.stop().then(() => {
+                    document.getElementById('scanner-container').classList.add('hidden');
+                    html5QrCode = null;
+                });
             }
         }
 
-        function processIzin(id) {
-            const santri = db.santri.find(s => s.id == id);
-            if(!santri) return alert("Santri dengan ID " + id + " tidak ditemukan!");
+        document.getElementById('sm-nis').oninput = (e) => lookupSantri(e.target.value);
 
-            if(db.settings.izinMode === 'libur') {
-                submitIzin(santri, "Libur Panjang", null);
+        function lookupSantri(nis) {
+            const santri = db.santri.find(s => s.nis === nis);
+            const info = document.getElementById('sm-info');
+            if(santri) {
+                info.innerText = `Santri: ${santri.nama} | Kamar: ${santri.asrama} | Status: ${santri.status}`;
+                info.className = "p-3 bg-emerald-50 rounded-xl text-xs font-semibold text-emerald-700 block";
             } else {
-                const existing = db.izin.find(i => i.santriId == id && !i.kembaliAt);
-                if(existing) {
-                    // Check-in
-                    existing.kembaliAt = new Date().toLocaleString('id-ID');
-                    alert(`Check-in: ${santri.nama} telah kembali.`);
-                    saveDB();
-                    renderIzinLog();
-                    renderStats();
-                } else {
-                    // Check-out (Buka Modal Alasan)
-                    document.getElementById('modal-reason').classList.remove('hidden');
-                    document.getElementById('izin-reason').value = "";
-                    document.getElementById('confirm-izin-btn').onclick = () => {
-                        const alasan = document.getElementById('izin-reason').value || "Keperluan Santri";
-                        submitIzin(santri, alasan, "2 Jam");
-                        closeModal('modal-reason');
-                    };
-                }
+                info.innerText = "NIS tidak ditemukan";
+                info.className = "p-3 bg-red-50 rounded-xl text-xs font-semibold text-red-700 block";
             }
         }
 
-        function submitIzin(s, alasan, durasi) {
-            const entry = {
+        function processSmartAction() {
+            const nis = document.getElementById('sm-nis').value;
+            const santri = db.santri.find(s => s.nis === nis);
+
+            if(!santri) return showToast("Pilih Santri Terlebih Dahulu");
+
+            const record = {
                 id: Date.now(),
-                santriId: s.id,
-                nama: s.nama,
-                alasan: alasan,
-                waktu: new Date().toLocaleString('id-ID'),
-                kembaliAt: null,
-                tipe: db.settings.izinMode
+                sid: santri.id,
+                nama: santri.nama,
+                tgl: new Date().toLocaleDateString('id-ID'),
+                status: activeIzinType === 'checkin' ? 'Kembali' : 'Pulang'
             };
-            db.izin.push(entry);
+
+            if(activeIzinType === 'biasa') {
+                santri.status = "Izin";
+                record.tipe = "Izin Biasa";
+                record.detail = `Keluar: ${document.getElementById('sm-tgl-out').value} | Kembali: ${document.getElementById('sm-tgl-in').value}`;
+            } else if(activeIzinType === 'libur') {
+                santri.status = "Libur";
+                record.tipe = "Libur Panjang";
+                record.detail = `Mulai: ${document.getElementById('lib-start').value} | End: ${document.getElementById('lib-end').value}`;
+            } else {
+                santri.status = "Aktif";
+                record.tipe = "Check-In";
+                record.detail = "Santri kembali ke pondok";
+            }
+
+            db.izin.push(record);
             saveDB();
-            renderIzinLog();
-            renderStats();
-            alert(`${s.nama} tercatat ${alasan}`);
+            initApp();
+            closeSmartModal();
+            showToast("Berhasil diproses!");
+        }
+
+        // Render Utilities (Santri, Pelanggaran, Dashboard)
+        function renderSantri() {
+            const q = document.getElementById('src-santri').value.toLowerCase();
+            const body = document.getElementById('table-santri');
+            body.innerHTML = '';
+            db.santri.filter(s => s.nama.toLowerCase().includes(q) || s.nis.includes(q)).forEach(s => {
+                body.innerHTML += `<tr>
+                    <td class="p-4 font-bold">${s.nama}</td>
+                    <td class="p-4 text-slate-500 font-mono text-xs">${s.nis}</td>
+                    <td class="p-4 text-xs font-semibold">${s.asrama}</td>
+                    <td class="p-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${s.status==='Aktif'?'bg-green-100 text-green-700':'bg-orange-100 text-orange-700'}">${s.status}</span></td>
+                    <td class="p-4 text-right">
+                        ${currentUser.role==='admin'?`<button onclick="delSantri(${s.id})" class="text-red-400"><i class="fas fa-trash"></i></button>`:'-'}
+                    </td>
+                </tr>`;
+            });
         }
 
         function renderIzinLog() {
-            const log = document.getElementById('izin-status-log');
-            if(!log) return;
-            log.innerHTML = db.izin.slice(-20).reverse().map(i => `
-                <div class="p-3 bg-white border rounded-xl text-xs flex justify-between items-center shadow-sm">
-                    <div>
-                        <div class="font-bold">${i.nama} <span class="text-[10px] text-gray-400 font-normal">#${i.santriId}</span></div>
-                        <div class="text-gray-500">${i.alasan} • ${i.waktu}</div>
-                    </div>
-                    <div class="${i.kembaliAt ? 'text-green-600' : 'text-orange-500'} font-bold">
-                        ${i.kembaliAt ? 'KEMBALI' : 'DI LUAR'}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // --- DASHBOARD RECOVERY ---
-        function renderStats() {
-            const total = db.santri.length;
-            const hadir = total - db.izin.filter(i => !i.kembaliAt).length;
-            const izin = db.izin.filter(i => !i.kembaliAt).length;
-            
-            if(document.getElementById('dash-total-santri')) document.getElementById('dash-total-santri').innerText = total;
-            if(document.getElementById('dash-hadir')) document.getElementById('dash-hadir').innerText = hadir;
-            if(document.getElementById('dash-izin')) document.getElementById('dash-izin').innerText = izin;
-            
-            renderCharts();
-            renderRecentLogs();
-        }
-
-        function renderRecentLogs() {
-            const log = document.getElementById('dash-recent-log');
-            if(!log) return;
-            log.innerHTML = db.izin.slice(-5).reverse().map(i => `
-                <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
-                    <div class="w-2 h-2 rounded-full ${i.kembaliAt ? 'bg-green-500' : 'bg-orange-500'}"></div>
-                    <div class="flex-1">
-                        <p class="text-xs font-bold">${i.nama}</p>
-                        <p class="text-[10px] text-gray-400">${i.alasan} - ${i.waktu}</p>
-                    </div>
-                </div>
-            `).join('') || '<p class="text-xs text-gray-400 text-center py-4">Belum ada aktivitas.</p>';
-        }
-
-        function renderCharts() {
-            const ctx = document.getElementById('chart-gender')?.getContext('2d');
-            if(!ctx) return;
-            if(window.myChart) window.myChart.destroy();
-            
-            const l = db.santri.filter(s => s.gender === 'Laki-laki').length;
-            const p = db.santri.filter(s => s.gender === 'Perempuan').length;
-
-            window.myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Laki-laki', 'Perempuan'],
-                    datasets: [{
-                        data: [l, p],
-                        backgroundColor: ['#3b82f6', '#ec4899'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
+            const log = document.getElementById('log-izin');
+            log.innerHTML = '';
+            [...db.izin].reverse().forEach(i => {
+                log.innerHTML += `<div class="p-4 flex justify-between items-center text-sm">
+                    <div><p class="font-bold">${i.nama} <span class="text-[10px] uppercase text-slate-400 ml-2">${i.tipe}</span></p><p class="text-[10px] text-slate-400">${i.detail}</p></div>
+                    <div class="text-[10px] font-bold ${i.status==='Kembali'?'text-emerald-500':'text-orange-500'}">${i.status.toUpperCase()}</div>
+                </div>`;
             });
         }
 
-        // --- EXPORT / IMPORT ---
-        function exportData(type) {
-            let data = db.santri;
-            if(type === 'filtered') {
-                const s = document.getElementById('f-search').value.toLowerCase();
-                const a = document.getElementById('f-asrama').value;
-                data = db.santri.filter(x => 
-                    (x.nama.toLowerCase().includes(s) || x.id.toString().includes(s)) &&
-                    (a === "" || x.asrama === a)
-                );
-            }
-
-            let csv = "ID;Nama;Gender;Asrama;Sekolah;Kelas;Wali;Alamat;Telepon\n";
-            data.forEach(x => {
-                csv += `${x.id};${x.nama};${x.gender};${x.asrama};${x.sekolah};${x.kelas};${x.wali};${x.alamat};${x.telp}\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', `data_santri_${new Date().getTime()}.csv`);
-            a.click();
-        }
-
-        function importCSV(input) {
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const lines = e.target.result.split('\n');
-                let count = 0;
-                for(let i = 1; i < lines.length; i++) {
-                    const col = lines[i].split(';');
-                    if(col.length < 5) continue;
-                    db.santri.push({
-                        id: generateAutoId(),
-                        nama: col[1], gender: col[2], asrama: col[3], sekolah: col[4], kelas: col[5],
-                        wali: col[6] || "-", alamat: col[7] || "-", telp: col[8] || "-",
-                        status: 'Santri', createdAt: new Date().toISOString(), sync: 'Pending'
-                    });
-                    count++;
-                }
-                saveDB(); renderTableSantri(); renderStats();
-                alert(`Berhasil mengimport ${count} santri baru.`);
-            };
-            reader.readAsText(file);
-        }
-
-        // --- UI UTILS ---
-        function initFilters() {
-            updateAsramaSelects();
-            updateKelasSelect('s-kelas', 'MI');
-            updateKelasSelect('f-kelas', 'MI'); // Default initial
-        }
-
-        function updateAsramaSelects() {
-            const opts = db.settings.asrama.map(a => `<option value="${a}">${a}</option>`).join('');
-            document.getElementById('s-asrama').innerHTML = opts;
-            document.getElementById('f-asrama').innerHTML = '<option value="">Semua Asrama</option>' + opts;
-        }
-
-        function updateKelasSelect(targetId, sekolah) {
-            const target = document.getElementById(targetId);
-            let limit = sekolah === 'MI' ? 6 : 3;
-            let html = targetId.startsWith('f') ? '<option value="">Semua Kelas</option>' : '';
-            for(let i=1; i<=limit; i++) html += `<option value="${i}">${i}</option>`;
-            target.innerHTML = html;
-        }
-
-        function updateSelected(el) {
-            el.checked ? selectedIds.add(el.value) : selectedIds.delete(el.value);
-            updateBulkUI();
-        }
-
-        function toggleCheckAll(src) {
-            document.querySelectorAll('.row-check').forEach(c => {
-                c.checked = src.checked;
-                updateSelected(c);
+        function renderPelanggaran() {
+            const body = document.getElementById('table-pelanggaran'); body.innerHTML = '';
+            db.pelanggaran.forEach(p => {
+                body.innerHTML += `<tr><td class="p-3 font-bold">${p.nama}</td><td class="p-3">${p.tipe}</td><td class="p-3 font-black text-red-600">${p.poin}</td><td class="p-3 text-[10px]">${p.tgl}</td></tr>`;
             });
         }
 
-        function updateBulkUI() {
-            const bar = document.getElementById('bulk-actions');
-            bar.classList.toggle('hidden', selectedIds.size === 0);
-            document.getElementById('bulk-count').innerText = `${selectedIds.size} Dipilih`;
+        function renderUsers() {
+            const list = document.getElementById('list-user'); list.innerHTML = '';
+            db.users.forEach(u => {
+                list.innerHTML += `<div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg text-xs font-bold">
+                    <span>${u.user} (${u.role})</span>
+                    ${u.user!=='admin'?`<button onclick="delUser('${u.user}')" class="text-red-500">&times;</button>`:''}
+                </div>`;
+            });
         }
 
-        function addAsrama() {
-            const val = document.getElementById('new-asrama').value;
-            if(!val) return;
-            db.settings.asrama.push(val);
-            saveDB(); renderAsramaList(); updateAsramaSelects();
-            document.getElementById('new-asrama').value = "";
+        function populateSelects() {
+            document.getElementById('p-sid').innerHTML = '<option value="">Pilih Santri...</option>' + db.santri.map(s => `<option value="${s.id}">${s.nama} (${s.nis})</option>`).join('');
         }
 
-        function renderAsramaList() {
-            const ui = document.getElementById('asrama-list-ui');
-            if(!ui) return;
-            ui.innerHTML = db.settings.asrama.map(a => `
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl text-sm">
-                    <span>${a}</span>
-                    <button onclick="deleteAsrama('${a}')" class="text-red-400"><i class="fas fa-times"></i></button>
-                </div>
-            `).join('');
+        function updateDashboard() {
+            document.getElementById('dash-total').innerText = db.santri.length;
+            document.getElementById('dash-izin').innerText = db.santri.filter(s => s.status !== 'Aktif').length;
+            document.getElementById('dash-poin').innerText = db.santri.reduce((a,b) => a + b.poin, 0);
+            document.getElementById('dash-user').innerText = db.users.length;
         }
 
-        function deleteAsrama(a) {
-            db.settings.asrama = db.settings.asrama.filter(x => x !== a);
-            saveDB(); renderAsramaList(); updateAsramaSelects();
+        function showToast(m) {
+            const t = document.getElementById('toast'); t.innerText = m;
+            t.classList.remove('opacity-0', 'translate-y-2'); t.classList.add('opacity-100', '-translate-y-2');
+            setTimeout(() => { t.classList.remove('opacity-100', '-translate-y-2'); t.classList.add('opacity-0', 'translate-y-2'); }, 2000);
         }
 
-        function manualSync() {
-            if(!navigator.onLine) return alert("Offline: Hubungkan ke internet untuk sinkronisasi.");
-            document.getElementById('sync-text').innerText = "Syncing...";
-            setTimeout(() => {
-                db.santri.forEach(s => s.sync = 'Synced');
-                db.pendingSync = [];
-                saveDB();
-                renderTableSantri();
-                document.getElementById('sync-text').innerText = "Sync Berhasil";
-                setTimeout(() => document.getElementById('sync-text').innerText = "Sync Manual", 2000);
-            }, 1500);
-        }
+        // Form Submits
+        document.getElementById('form-santri').onsubmit = (e) => {
+            e.preventDefault();
+            db.santri.push({ id: Date.now(), nama: document.getElementById('s-nama').value, nis: document.getElementById('s-nis').value, asrama: document.getElementById('s-asrama').value, status: 'Aktif', poin: 0 });
+            saveDB(); initApp(); document.getElementById('modal-santri').classList.add('hidden'); e.target.reset();
+        };
 
-        function saveSettings() {
-            db.settings.pondok = document.getElementById('set-pondok-name').value;
-            saveDB();
-            loadApp();
-            alert("Pengaturan disimpan!");
-        }
+        document.getElementById('form-pelanggaran').onsubmit = (e) => {
+            e.preventDefault();
+            const sid = parseInt(document.getElementById('p-sid').value);
+            const santri = db.santri.find(s => s.id === sid);
+            const pMap = { "Ringan": 5, "Sedang": 25, "Berat": 100 };
+            const p = { sid, nama: santri.nama, tipe: document.getElementById('p-tipe').value, poin: pMap[document.getElementById('p-tipe').value], ket: document.getElementById('p-ket').value, tgl: new Date().toLocaleDateString('id-ID') };
+            db.pelanggaran.push(p); santri.poin += p.poin;
+            saveDB(); initApp(); e.target.reset();
+        };
 
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        document.getElementById('form-user').onsubmit = (e) => {
+            e.preventDefault();
+            db.users.push({ user: document.getElementById('u-name').value, pass: document.getElementById('u-pass').value, role: 'pengurus' });
+            saveDB(); initApp(); e.target.reset();
+        };
+
+        function delUser(u) { db.users = db.users.filter(x => x.user !== u); saveDB(); initApp(); }
+        function delSantri(id) { if(confirm("Hapus?")) { db.santri = db.santri.filter(s => s.id !== id); saveDB(); initApp(); } }
+        function saveSettings() { db.settings.pondok = document.getElementById('set-pondok').value; saveDB(); initApp(); showToast("Tersimpan!"); }
         function logout() { sessionStorage.removeItem('esantri_session'); location.reload(); }
 
-        document.getElementById('toggle-sidebar').onclick = () => {
-            document.getElementById('sidebar').classList.toggle('sidebar-minimized');
+        let chart = null;
+        function initChart() {
+            const ctx = document.getElementById('kamarChart').getContext('2d');
+            const kamars = {}; db.santri.forEach(s => kamars[s.asrama] = (kamars[s.asrama] || 0) + s.poin);
+            if(chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: Object.keys(kamars), datasets: [{ label: 'Akumulasi Poin Per Kamar', data: Object.values(kamars), backgroundColor: '#ef4444', borderRadius: 10 }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function exportData(type) {
+            let csv = type === 'izin' ? 'Nama,Tipe,Detail,Status,Tanggal\n' : 'Nama,Tipe,Poin,Tanggal\n';
+            const data = type === 'izin' ? db.izin : db.pelanggaran;
+            data.forEach(d => {
+                csv += type === 'izin' ? `${d.nama},${d.tipe},${d.detail},${d.status},${d.tgl}\n` : `${d.nama},${d.tipe},${d.poin},${d.tgl}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `rekap_${type}.csv`; a.click();
+        }
+
+        window.onload = () => {
+            const session = sessionStorage.getItem('esantri_session');
+            if(session) {
+                currentUser = JSON.parse(session);
+                document.getElementById('login-page').classList.add('hidden');
+                initApp();
+            }
         };
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     </script>
 </body>
 </html>
-
-
-
-
-
