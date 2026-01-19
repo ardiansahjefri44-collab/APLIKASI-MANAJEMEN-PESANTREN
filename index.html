@@ -3,219 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Santri Pro - Perizinan Smart Scan</title>
+    <meta name="theme-color" content="#047857">
+    <title>E-Santri Pro - Smart System</title>
+    
+    <!-- Link Manifest (WAJIB) -->
+    <link rel="manifest" href="manifest.json">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; overflow: hidden; background-color: #f9fafb; }
-        .nav-active { background-color: #f0fdf4; color: #059669; border-right: 4px solid #059669; }
-        .scale-in { animation: scaleIn 0.2s ease-out; }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #047857;
+            --secondary: #d97706;
+            --bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23047857' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; background-image: var(--bg-pattern); }
+        .font-arabic { font-family: 'Amiri', serif; }
+
+        .glass-panel { background: rgba(255,255,255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255, 0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        .nav-active { background: linear-gradient(90deg, #ecfdf5 0%, #d1fae5 100%); color: #065f46; border-right: 4px solid #059669; font-weight: 600; }
+        .scale-in { animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .custom-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .custom-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .btn-primary { background-color: #059669; color: white; transition: background 0.2s; }
-        .btn-primary:hover { background-color: #047857; }
-        #reader-global { border: none !important; width: 100% !important; }
+        .btn-primary { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; transition: all 0.2s; box-shadow: 0 4px 6px rgba(4, 120, 87, 0.2); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 8px rgba(4, 120, 87, 0.3); }
+        .btn-primary:active { transform: translateY(0); }
+        #reader-global { border: none !important; width: 100% !important; border-radius: 1rem !important; overflow: hidden; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background-color: transparent; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spin-icon { animation: spin 1s linear infinite; }
     </style>
 </head>
-<body class="h-screen flex text-slate-800">
+<body class="h-screen flex text-slate-800 overflow-hidden">
 
     <!-- Login Page -->
-    <div id="login-page" class="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-600 p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md scale-in text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mb-4">
-                <i class="fas fa-mosque fa-2x"></i>
+    <div id="login-page" class="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900 p-4 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]">
+        <div class="absolute inset-0 bg-emerald-800/90"></div>
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md scale-in relative z-10">
+            <div class="flex justify-center mb-6">
+                <div class="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-2xl flex items-center justify-center shadow-lg rotate-3">
+                    <i class="fas fa-quran text-4xl"></i>
+                </div>
             </div>
-            <h1 class="text-2xl font-bold">E-Santri Pro</h1>
-            <p class="text-slate-500 mb-6">Pondok Pesantren Madani</p>
-            <form id="login-form" class="space-y-4">
-                <input type="text" id="username" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Username" required>
-                <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Password" required>
-                <button type="submit" class="w-full py-3 btn-primary rounded-lg font-semibold shadow-lg">Masuk</button>
+            <h1 class="text-3xl font-bold text-center text-slate-800 mb-1">E-Santri Pro</h1>
+            <p class="text-center text-emerald-600 font-medium mb-8 font-arabic text-lg">Pondok Pesantren Madani</p>
+            
+            <form id="login-form" class="space-y-5">
+                <div class="relative">
+                    <i class="fas fa-user absolute left-4 top-3.5 text-slate-400"></i>
+                    <input type="text" id="username" class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50 focus:bg-white transition-colors" placeholder="Username" required>
+                </div>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-3.5 text-slate-400"></i>
+                    <input type="password" id="password" class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50 focus:bg-white transition-colors" placeholder="Password" required>
+                </div>
+                <button type="submit" class="w-full py-3 btn-primary rounded-xl font-bold shadow-lg tracking-wide text-sm">MASUK APLIKASI</button>
+                <p class="text-xs text-center text-slate-400 mt-2">Gunakan: admin / 123</p>
             </form>
         </div>
     </div>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-white border-r h-full flex flex-col transition-all duration-300 z-50">
-        <div class="p-6 flex items-center gap-3 border-b h-20">
-            <div class="w-10 h-10 bg-emerald-600 flex items-center justify-center rounded-lg text-white">
-                <i class="fas fa-quran text-xl"></i>
+    <aside id="sidebar" class="w-64 glass-panel border-r-0 flex flex-col transition-all duration-300 z-50 h-full">
+        <div class="p-6 flex items-center gap-3 h-20">
+            <div class="w-10 h-10 bg-emerald-600 flex items-center justify-center rounded-xl text-white shadow-lg shadow-emerald-500/30">
+                <i class="fas fa-quran text-lg"></i>
             </div>
-            <span class="font-bold text-xl tracking-tight logo-text">E-Santri<span class="text-emerald-600">Pro</span></span>
+            <span class="font-bold text-lg tracking-tight text-slate-800">E-Santri<span class="text-emerald-600">Pro</span></span>
         </div>
-        <nav class="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-hide">
-            <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="dashboard">
-                <i class="fas fa-home w-5"></i><span>Dashboard</span>
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-hide">
+            <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-white hover:text-emerald-600 transition-all group" data-tab="dashboard">
+                <i class="fas fa-chart-pie w-5 group-hover:scale-110 transition-transform"></i><span class="font-medium">Dashboard</span>
             </button>
-            <button onclick="switchTab('santri')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="santri">
-                <i class="fas fa-users w-5"></i><span>Data Santri</span>
+            <button onclick="switchTab('santri')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-white hover:text-emerald-600 transition-all group" data-tab="santri">
+                <i class="fas fa-users w-5 group-hover:scale-110 transition-transform"></i><span class="font-medium">Data Santri</span>
             </button>
-            <button onclick="switchTab('perizinan')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="perizinan">
-                <i class="fas fa-id-card-clip w-5"></i><span>Perizinan</span>
+            <button onclick="switchTab('perizinan')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-white hover:text-emerald-600 transition-all group" data-tab="perizinan">
+                <i class="fas fa-id-card-clip w-5 group-hover:scale-110 transition-transform"></i><span class="font-medium">Perizinan</span>
             </button>
-            <button onclick="switchTab('pelanggaran')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="pelanggaran">
-                <i class="fas fa-exclamation-triangle w-5"></i><span>Pelanggaran</span>
+            <button onclick="switchTab('pelanggaran')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-white hover:text-emerald-600 transition-all group" data-tab="pelanggaran">
+                <i class="fas fa-exclamation-triangle w-5 group-hover:scale-110 transition-transform"></i><span class="font-medium">Pelanggaran</span>
             </button>
-            <div id="admin-nav" class="hidden">
-                <button onclick="switchTab('pengaturan')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" data-tab="pengaturan">
-                    <i class="fas fa-cog w-5"></i><span>Pengaturan</span>
+            <div id="admin-nav" class="hidden pt-4 mt-4 border-t border-slate-100">
+                <p class="px-4 text-xs font-bold text-slate-400 mb-2 uppercase">Admin Area</p>
+                <button onclick="switchTab('pengaturan')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-white hover:text-emerald-600 transition-all group" data-tab="pengaturan">
+                    <i class="fas fa-cog w-5 group-hover:scale-110 transition-transform"></i><span class="font-medium">Pengaturan</span>
                 </button>
             </div>
         </nav>
-        <div class="p-4 border-t">
-            <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+        <div class="p-4 border-t border-slate-100">
+            <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors font-medium">
                 <i class="fas fa-sign-out-alt w-5"></i><span>Keluar</span>
             </button>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden">
+    <main class="flex-1 flex flex-col h-full bg-transparent overflow-hidden relative">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30 pointer-events-none"></div>
+        
         <!-- Header -->
-        <header class="h-20 bg-white border-b px-8 flex items-center justify-between z-40">
+        <header class="h-20 glass-panel m-4 rounded-2xl px-8 flex items-center justify-between z-40">
             <div class="flex items-center gap-4">
-                <h2 id="page-title" class="text-xl font-bold text-slate-800">Perizinan</h2>
-            </div>
-            <div class="flex items-center gap-3 text-right">
+                <div class="bg-emerald-100 p-2 rounded-lg text-emerald-700">
+                    <i class="fas fa-cube text-xl"></i>
+                </div>
                 <div>
-                    <p id="user-display" class="text-sm font-bold">Admin</p>
-                    <p id="pondok-display" class="text-[10px] text-emerald-600 font-bold uppercase">Pesantren Madani</p>
+                    <h2 id="page-title" class="text-xl font-bold text-slate-800">Dashboard</h2>
+                    <p class="text-xs text-slate-400">Sistem Manajemen Pesantren Terpadu</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Tombol Sync Manual -->
+                <button onclick="manualSync()" id="btn-sync" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors group relative">
+                    <i class="fas fa-sync text-emerald-600" id="icon-sync"></i>
+                    <span class="text-xs font-bold text-slate-600 hidden md:block" id="txt-sync">Synced</span>
+                    <!-- Indikator Pending -->
+                    <span id="badge-pending" class="hidden absolute -top-1 -right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+                    </span>
+                </button>
+
+                <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
+                    <div class="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                        <span id="user-initial">A</span>
+                    </div>
+                    <div class="text-right pr-2">
+                        <p id="user-display" class="text-sm font-bold text-slate-700 leading-tight">Admin</p>
+                        <p id="pondok-display" class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Pesantren Madani</p>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <div id="content-area" class="flex-1 overflow-y-auto p-8 scrollbar-hide">
+        <div id="content-area" class="flex-1 overflow-y-auto p-4 custom-scroll relative z-30 pb-20">
             
             <!-- Dashboard -->
-            <section id="tab-dashboard" class="tab-content hidden space-y-6">
+            <section id="tab-dashboard" class="tab-content hidden space-y-6 max-w-7xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-6 rounded-2xl border">
-                        <p class="text-xs font-bold text-slate-400 mb-1">TOTAL SANTRI</p>
-                        <h3 class="text-2xl font-bold" id="dash-total">0</h3>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-emerald-200 transition-colors">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Total Santri</p>
+                            <h3 class="text-3xl font-bold text-slate-800" id="dash-total">0</h3>
+                        </div>
+                        <div class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-colors"><i class="fas fa-users"></i></div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border">
-                        <p class="text-xs font-bold text-slate-400 mb-1">SEDANG IZIN</p>
-                        <h3 class="text-2xl font-bold text-orange-500" id="dash-izin">0</h3>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-blue-200 transition-colors">
+                        <div><p class="text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Santri Laki-laki</p><h3 class="text-3xl font-bold text-blue-600" id="dash-l">0</h3></div>
+                        <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors"><i class="fas fa-male"></i></div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border">
-                        <p class="text-xs font-bold text-slate-400 mb-1">TOTAL POIN</p>
-                        <h3 class="text-2xl font-bold text-red-600" id="dash-poin">0</h3>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-pink-200 transition-colors">
+                        <div><p class="text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Santri Perempuan</p><h3 class="text-3xl font-bold text-pink-600" id="dash-p">0</h3></div>
+                        <div class="w-10 h-10 bg-pink-50 rounded-full flex items-center justify-center text-pink-600 group-hover:bg-pink-500 group-hover:text-white transition-colors"><i class="fas fa-female"></i></div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border">
-                        <p class="text-xs font-bold text-slate-400 mb-1">PENGGUNA</p>
-                        <h3 class="text-2xl font-bold text-blue-600" id="dash-user">0</h3>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-red-200 transition-colors">
+                        <div><p class="text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Akumulasi Poin</p><h3 class="text-3xl font-bold text-red-600" id="dash-poin">0</h3></div>
+                        <div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center text-red-600 group-hover:bg-red-500 group-hover:text-white transition-colors"><i class="fas fa-exclamation-circle"></i></div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-2xl border h-96">
-                    <canvas id="kamarChart"></canvas>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 h-80">
+                            <div class="flex justify-between items-center mb-4"><h4 class="font-bold text-slate-700 flex items-center gap-2"><i class="fas fa-chart-bar text-emerald-500"></i> Analisis Poin Per Kamar</h4></div>
+                            <canvas id="kamarChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="bg-gradient-to-br from-orange-50 to-white p-6 rounded-3xl shadow-sm border border-orange-100">
+                            <h4 class="font-bold text-orange-700 mb-4 flex items-center gap-2"><i class="fas fa-walking"></i> Sedang Izin</h4>
+                            <div class="space-y-3 max-h-48 overflow-y-auto custom-scroll" id="dash-izin-list"></div>
+                        </div>
+                        <div class="bg-gradient-to-br from-red-50 to-white p-6 rounded-3xl shadow-sm border border-red-100">
+                            <h4 class="font-bold text-red-700 mb-4 flex items-center gap-2"><i class="fas fa-clock"></i> Santri Terlambat</h4>
+                            <div class="space-y-3 max-h-48 overflow-y-auto custom-scroll" id="dash-late-list"></div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <!-- Perizinan -->
-            <section id="tab-perizinan" class="tab-content space-y-8">
-                <!-- Opsi Tombol Utama -->
+            <section id="tab-perizinan" class="tab-content space-y-8 max-w-7xl mx-auto hidden">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <button onclick="openIzinModal('biasa')" class="group bg-white p-6 rounded-2xl border hover:border-orange-500 hover:shadow-xl transition-all flex flex-col items-center gap-4">
-                        <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                            <i class="fas fa-walking"></i>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="font-bold text-lg">Izin Biasa</h4>
-                            <p class="text-xs text-slate-400">Scan NIS / Input Manual</p>
-                        </div>
+                    <button onclick="openIzinModal('biasa')" class="group bg-white p-8 rounded-3xl border border-slate-100 hover:border-orange-500 hover:shadow-xl transition-all flex flex-col items-center gap-4">
+                        <div class="w-20 h-20 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-sm"><i class="fas fa-walking"></i></div>
+                        <div class="text-center"><h4 class="font-bold text-lg text-slate-700">Izin Biasa</h4><p class="text-xs text-slate-400">Input Individu</p></div>
                     </button>
-                    <button onclick="openIzinModal('libur')" class="group bg-white p-6 rounded-2xl border hover:border-blue-500 hover:shadow-xl transition-all flex flex-col items-center gap-4">
-                        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                            <i class="fas fa-plane-departure"></i>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="font-bold text-lg">Libur Panjang</h4>
-                            <p class="text-xs text-slate-400">Masa Liburan Massal</p>
-                        </div>
+                    <button onclick="openIzinModal('libur')" class="group bg-white p-8 rounded-3xl border border-slate-100 hover:border-blue-500 hover:shadow-xl transition-all flex flex-col items-center gap-4">
+                        <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-sm"><i class="fas fa-plane-departure"></i></div>
+                        <div class="text-center"><h4 class="font-bold text-lg text-slate-700">Libur Panjang</h4><p class="text-xs text-slate-400">Scan Massal / Manual</p></div>
                     </button>
-                    <button onclick="openIzinModal('checkin')" class="group bg-white p-6 rounded-2xl border hover:border-emerald-500 hover:shadow-xl transition-all flex flex-col items-center gap-4">
-                        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                            <i class="fas fa-user-check"></i>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="font-bold text-lg">Check-In</h4>
-                            <p class="text-xs text-slate-400">Kembali ke Pondok</p>
-                        </div>
+                    <button onclick="openIzinModal('checkin')" class="group bg-white p-8 rounded-3xl border border-slate-100 hover:border-emerald-500 hover:shadow-xl transition-all flex flex-col items-center gap-4">
+                        <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-sm"><i class="fas fa-user-check"></i></div>
+                        <div class="text-center"><h4 class="font-bold text-lg text-slate-700">Check-In</h4><p class="text-xs text-slate-400">Auto-Record (No Confirm)</p></div>
                     </button>
                 </div>
 
-                <!-- Log Perizinan -->
-                <div class="bg-white rounded-2xl border overflow-hidden">
-                    <div class="p-4 border-b flex justify-between items-center bg-slate-50">
-                        <h4 class="font-bold text-sm uppercase">Riwayat Aktivitas</h4>
-                        <button onclick="exportData('izin')" class="text-xs font-bold text-emerald-600">Export CSV</button>
+                <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                        <h4 class="font-bold text-sm uppercase text-slate-500 tracking-wider">Riwayat Aktivitas</h4>
+                        <button onclick="exportData('izin')" class="text-xs font-bold text-emerald-600 hover:underline">Export CSV</button>
                     </div>
-                    <div class="divide-y max-h-[400px] overflow-y-auto" id="log-izin"></div>
+                    <div class="divide-y max-h-[400px] overflow-y-auto custom-scroll" id="log-izin"></div>
                 </div>
             </section>
 
-            <!-- Santri & Pelanggaran tetap ada (disingkat untuk fokus pada request) -->
-            <section id="tab-santri" class="tab-content hidden space-y-4">
-                <div class="flex justify-between items-center">
-                    <input type="text" id="src-santri" oninput="renderSantri()" placeholder="Cari NIS/Nama..." class="px-4 py-2 border rounded-xl w-1/3">
-                    <button onclick="openModal('modal-santri')" class="btn-primary px-6 py-2 rounded-xl font-bold">Tambah Santri</button>
-                </div>
-                <div class="bg-white rounded-2xl border overflow-hidden">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50 font-bold"><tr><th class="p-4">Santri</th><th class="p-4">NIS</th><th class="p-4">Kamar</th><th class="p-4">Status</th><th class="p-4"></th></tr></thead>
-                        <tbody id="table-santri" class="divide-y"></tbody>
-                    </table>
+            <!-- Santri -->
+            <section id="tab-santri" class="tab-content hidden space-y-6 max-w-7xl mx-auto">
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <div class="flex flex-wrap gap-4 justify-between items-center mb-6">
+                        <div class="flex flex-wrap gap-3 items-center flex-1">
+                            <input type="text" id="src-santri" oninput="renderSantri()" placeholder="Cari NIS/Nama..." class="px-4 py-2 border rounded-xl w-64 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <select id="filter-gender" onchange="renderSantri()" class="border p-2 rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-emerald-500"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
+                            <select id="filter-asrama" onchange="renderSantri()" class="border p-2 rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-emerald-500"><option value="">Semua Asrama</option></select>
+                            <select id="filter-tahun" onchange="renderSantri()" class="border p-2 rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-emerald-500"><option value="">Semua Tahun</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option></select>
+                        </div>
+                        <div class="flex gap-3 items-center">
+                            <div class="relative group">
+                                <input type="file" id="import-file" accept=".csv, .xlsx, .xls" onchange="importCSV()" class="hidden">
+                                <button onclick="document.getElementById('import-file').click()" class="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-colors border border-emerald-100"><i class="fas fa-file-import mr-1"></i> Import</button>
+                            </div>
+                            <button onclick="openModal('modal-santri')" class="btn-primary px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2"><i class="fas fa-plus"></i> Tambah Santri</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm"><thead class="bg-slate-50 font-bold text-slate-500 uppercase text-xs"><tr><th class="p-4 rounded-l-xl"><input type="checkbox" id="check-all" onclick="toggleAllSantri(this)"></th><th class="p-4">Data Santri</th><th class="p-4">Kamar</th><th class="p-4">Tahun</th><th class="p-4">Status</th><th class="p-4 text-right rounded-r-xl">Aksi</th></tr></thead><tbody id="table-santri" class="divide-y divide-slate-100"></tbody></table>
+                    </div>
+                    <div class="mt-6 flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div class="flex gap-2 items-center">
+                            <select id="bulk-status" class="border p-2 rounded-lg text-sm outline-none"><option value="">Bulk Action</option><option value="Bertugas">Set Bertugas</option><option value="Khidmah">Set Khidmah</option><option value="Alumni">Set Alumni</option><option value="export">Export Terfilter</option></select>
+                            <button onclick="applyBulkStatus()" class="px-6 py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700 transition-colors">Terapkan</button>
+                        </div>
+                        <p class="text-xs text-slate-400">Total: <span id="count-santri">0</span> Santri</p>
+                    </div>
                 </div>
             </section>
 
             <!-- Pelanggaran -->
-            <section id="tab-pelanggaran" class="tab-content hidden space-y-6">
+            <section id="tab-pelanggaran" class="tab-content hidden space-y-6 max-w-7xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-2xl border h-fit">
-                        <h4 class="font-bold mb-4 uppercase text-xs">Input Pelanggaran</h4>
-                        <form id="form-pelanggaran" class="space-y-3">
-                            <select id="p-sid" class="w-full p-2 border rounded-lg text-sm" required></select>
-                            <select id="p-tipe" class="w-full p-2 border rounded-lg text-sm" required>
-                                <option value="Ringan">Ringan (5)</option>
-                                <option value="Sedang">Sedang (25)</option>
-                                <option value="Berat">Berat (100)</option>
-                            </select>
-                            <textarea id="p-ket" placeholder="Keterangan..." class="w-full p-2 border rounded-lg text-sm h-24"></textarea>
-                            <button class="w-full py-2 bg-red-600 text-white font-bold rounded-lg">SIMPAN</button>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm h-fit">
+                        <h4 class="font-bold mb-4 uppercase text-xs text-slate-500 tracking-wider">Input Pelanggaran</h4>
+                        <form id="form-pelanggaran" class="space-y-4">
+                            <div class="relative">
+                                <label class="text-xs font-bold text-slate-400 ml-1">Cari / Ketik Santri</label>
+                                <input type="text" list="list-santri-pel" id="p-nis-text" class="w-full p-3 border rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-red-500" placeholder="Nama / NIS..." required autocomplete="off">
+                                <datalist id="list-santri-pel"></datalist>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 ml-1">Kamar</label>
+                                <input type="text" id="p-kamar" class="w-full p-3 border rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-red-500" placeholder="Otomatis dari Santri..." required>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 ml-1">Kategori</label>
+                                <select id="p-kategori" onchange="updatePoinByKategori()" class="w-full p-3 border rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-red-500" required>
+                                    <option value="Ubudiyyah">Ubudiyyah</option>
+                                    <option value="Keamanan">Keamanan</option>
+                                    <option value="Maarif">Maarif</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 ml-1">Poin</label>
+                                <input type="number" id="p-poin" class="w-full p-3 border rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-red-500" required>
+                            </div>
+
+                            <textarea id="p-ket" placeholder="Keterangan..." class="w-full p-3 border rounded-xl text-sm h-24 bg-slate-50 outline-none focus:ring-2 focus:ring-red-500"></textarea>
+                            <button type="button" onclick="submitPelanggaran()" class="w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-200">SIMPAN DATA</button>
                         </form>
                     </div>
-                    <div class="md:col-span-2 bg-white rounded-2xl border overflow-hidden">
-                         <div class="p-4 border-b flex justify-between bg-slate-50">
-                            <h4 class="font-bold text-xs uppercase">Daftar Pelanggaran</h4>
-                            <button onclick="exportData('pelanggaran')" class="text-xs text-red-600 font-bold">Export</button>
+
+                    <div class="md:col-span-2 bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm flex flex-col">
+                         <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50">
+                            <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Daftar Pelanggaran</h4>
+                            
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <input type="text" id="filter-pel-nama" oninput="renderPelanggaran()" placeholder="Cari Nama..." class="p-2 border rounded-lg text-xs w-32 outline-none">
+                                <select id="filter-pel-asrama" onchange="renderPelanggaran()" class="p-2 border rounded-lg text-xs bg-white outline-none"><option value="">Semua Kamar</option></select>
+                                <select id="filter-pel-kategori" onchange="renderPelanggaran()" class="p-2 border rounded-lg text-xs bg-white outline-none">
+                                    <option value="">Semua Kategori</option>
+                                    <option value="Ubudiyyah">Ubudiyyah</option>
+                                    <option value="Keamanan">Keamanan</option>
+                                    <option value="Maarif">Maarif</option>
+                                </select>
+                            </div>
                          </div>
-                         <table class="w-full text-left text-sm">
-                             <thead class="bg-slate-50"><tr><th class="p-3">Santri</th><th class="p-3">Tipe</th><th class="p-3">Poin</th><th class="p-3">Tanggal</th></tr></thead>
-                             <tbody id="table-pelanggaran" class="divide-y"></tbody>
-                         </table>
+
+                         <div class="px-6 py-3 bg-red-50 border-b border-red-100 flex justify-between items-center">
+                            <span class="text-xs font-bold text-red-800">Total Poin (Berdasarkan Filter):</span>
+                            <span id="recap-poin" class="text-2xl font-black text-red-600">0</span>
+                         </div>
+
+                         <div class="overflow-x-auto flex-1"><table class="w-full text-left text-sm"><thead class="bg-slate-50"><tr><th class="p-4">Santri</th><th class="p-4">Kamar</th><th class="p-4">Kategori</th><th class="p-4">Poin</th><th class="p-4">Tanggal</th></tr></thead><tbody id="table-pelanggaran" class="divide-y divide-slate-100"></tbody></table></div>
+                         
+                         <div class="p-4 border-t border-slate-100 flex justify-end">
+                             <button onclick="exportData('pelanggaran')" class="text-xs font-bold text-white bg-slate-700 hover:bg-slate-800 px-4 py-2 rounded-lg flex items-center gap-2"><i class="fas fa-download"></i> Export Data Filter</button>
+                         </div>
                     </div>
                 </div>
             </section>
 
             <!-- Pengaturan -->
-            <section id="tab-pengaturan" class="tab-content hidden space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-2xl border">
-                        <h4 class="font-bold mb-4 uppercase text-xs">Profil Pesantren</h4>
-                        <input type="text" id="set-pondok" class="w-full p-2 border rounded-lg mb-3">
-                        <button onclick="saveSettings()" class="px-6 py-2 btn-primary rounded-lg font-bold">Simpan</button>
+            <section id="tab-pengaturan" class="tab-content hidden space-y-6 max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <h4 class="font-bold mb-4 uppercase text-xs text-slate-500 tracking-wider">Profil Pesantren</h4>
+                        <input type="text" id="set-pondok" class="w-full p-3 border rounded-xl mb-3 bg-slate-50">
+                        <button onclick="saveSettings()" class="px-6 py-2 btn-primary rounded-xl font-bold text-sm">Simpan Profil</button>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border">
-                        <h4 class="font-bold mb-4 uppercase text-xs">Manajemen User</h4>
-                        <form id="form-user" class="flex gap-2 mb-4">
-                            <input type="text" id="u-name" placeholder="User" class="flex-1 p-2 border rounded-lg text-sm">
-                            <input type="password" id="u-pass" placeholder="Pass" class="flex-1 p-2 border rounded-lg text-sm">
-                            <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg"><i class="fas fa-plus"></i></button>
-                        </form>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <h4 class="font-bold mb-4 uppercase text-xs text-slate-500 tracking-wider">Aturan Poin Pelanggaran</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs font-bold text-slate-600">Ubudiyyah (Poin Default)</label>
+                                <input type="number" id="set-poin-ubudiyyah" class="w-full p-2 border rounded-lg text-sm bg-slate-50 outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-600">Keamanan (Poin Default)</label>
+                                <input type="number" id="set-poin-keamanan" class="w-full p-2 border rounded-lg text-sm bg-slate-50 outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-600">Maarif (Poin Default)</label>
+                                <input type="number" id="set-poin-maarif" class="w-full p-2 border rounded-lg text-sm bg-slate-50 outline-none">
+                            </div>
+                            <button onclick="saveSettings()" class="px-6 py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700 w-full">Simpan Aturan Poin</button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <h4 class="font-bold mb-4 uppercase text-xs text-slate-500 tracking-wider">Manajemen User</h4>
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="u-name" placeholder="User" class="flex-1 p-2 border rounded-lg text-sm bg-slate-50">
+                            <input type="password" id="u-pass" placeholder="Pass" class="flex-1 p-2 border rounded-lg text-sm bg-slate-50">
+                            <button onclick="addUser()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"><i class="fas fa-plus"></i></button>
+                        </div>
                         <div id="list-user" class="space-y-2"></div>
                     </div>
                 </div>
@@ -223,381 +352,679 @@
         </div>
     </main>
 
-    <!-- Modal Smart Perizinan (Izin Biasa / Libur / Checkin) -->
+    <!-- Modal Smart Perizinan -->
     <div id="modal-smart-izin" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl scale-in">
-            <div id="smart-header" class="px-6 py-4 flex justify-between items-center text-white">
-                <h4 id="smart-title" class="font-bold">Form Perizinan</h4>
-                <button onclick="closeSmartModal()"><i class="fas fa-times"></i></button>
+            <div id="smart-header" class="px-8 py-6 flex justify-between items-center text-white">
+                <h4 id="smart-title" class="font-bold text-xl">Form Perizinan</h4>
+                <button onclick="closeSmartModal()" class="hover:rotate-90 transition-transform"><i class="fas fa-times text-xl"></i></button>
             </div>
             
-            <div class="p-6 space-y-6">
-                <!-- Global Scanner Area -->
+            <div class="p-8 space-y-6">
                 <div id="scanner-container" class="hidden space-y-3">
                     <div id="reader-global" class="rounded-2xl overflow-hidden bg-black aspect-video"></div>
-                    <p class="text-[10px] text-center text-slate-400 font-bold uppercase">Arahkan Kamera ke Barcode/QR NIS Santri</p>
+                    <p class="text-xs text-center text-slate-400 font-bold uppercase tracking-widest">Arahkan Kamera</p>
                 </div>
 
                 <div id="smart-form-container">
-                    <!-- Dinamis Konten -->
-                    <div class="space-y-4">
-                        <div class="flex gap-2">
-                            <input type="text" id="sm-nis" placeholder="NIS Santri" class="flex-1 px-4 py-3 border rounded-xl font-bold text-emerald-700 bg-emerald-50 outline-none focus:ring-2 focus:ring-emerald-500">
-                            <button onclick="toggleScanner()" class="px-4 bg-slate-800 text-white rounded-xl shadow-lg"><i class="fas fa-camera"></i></button>
+                    <div class="space-y-5">
+                        <div class="flex gap-3">
+                            <input type="text" id="sm-nis" placeholder="NIS Santri / Scan..." class="flex-1 px-5 py-4 border-2 border-slate-100 rounded-2xl font-bold text-emerald-700 bg-emerald-50/50 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                            <button type="button" id="btn-scan-toggle" onclick="toggleScanner()" class="px-6 bg-slate-800 text-white rounded-2xl shadow-lg hover:bg-slate-700 transition-colors"><i class="fas fa-camera text-lg"></i></button>
                         </div>
-                        <div id="sm-info" class="p-3 bg-slate-50 rounded-xl text-xs font-semibold text-slate-500 hidden"></div>
                         
-                        <!-- Area Izin Biasa -->
-                        <div id="area-biasa" class="hidden space-y-4">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">TGL KELUAR</label><input type="date" id="sm-tgl-out" class="w-full p-2 border rounded-lg text-sm"></div>
-                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">JAM KELUAR</label><input type="time" id="sm-jam-out" class="w-full p-2 border rounded-lg text-sm"></div>
+                        <div id="sm-info" class="p-4 rounded-xl text-sm font-semibold hidden"></div>
+                        
+                        <div id="area-biasa" class="hidden space-y-5">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="text-[10px] font-bold text-slate-400 ml-1">TGL KELUAR</label><input type="date" id="sm-tgl-out" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-emerald-500 outline-none"></div>
+                                <div><label class="text-[10px] font-bold text-slate-400 ml-1">JAM KELUAR</label><input type="time" id="sm-jam-out" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-emerald-500 outline-none"></div>
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">BATAS KEMBALI</label><input type="date" id="sm-tgl-in" class="w-full p-2 border rounded-lg text-sm"></div>
-                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">JAM KEMBALI</label><input type="time" id="sm-jam-in" class="w-full p-2 border rounded-lg text-sm"></div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="text-[10px] font-bold text-slate-400 ml-1">BATAS KEMBALI</label><input type="date" id="sm-tgl-in" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-emerald-500 outline-none"></div>
+                                <div><label class="text-[10px] font-bold text-slate-400 ml-1">JAM KEMBALI</label><input type="time" id="sm-jam-in" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-emerald-500 outline-none"></div>
                             </div>
-                            <textarea id="sm-alasan" placeholder="Alasan Izin..." class="w-full p-3 border rounded-xl text-sm h-20"></textarea>
+                            <textarea id="sm-alasan" placeholder="Alasan Izin..." class="w-full p-4 border border-slate-200 rounded-xl text-sm h-24 focus:border-emerald-500 outline-none"></textarea>
+                            <button id="sm-submit-biasa" class="w-full py-4 bg-orange-500 text-white font-black rounded-2xl shadow-xl shadow-orange-200 hover:bg-orange-600 transition-colors">PROSES IZIN</button>
                         </div>
 
-                        <!-- Area Libur -->
-                        <div id="area-libur" class="hidden space-y-4">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">MULAI</label><input type="date" id="lib-start" class="w-full p-2 border rounded-lg text-sm"></div>
-                                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">BERAKHIR</label><input type="date" id="lib-end" class="w-full p-2 border rounded-lg text-sm"></div>
+                        <div id="area-libur" class="hidden space-y-5">
+                            <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                                <p class="text-xs font-bold text-blue-600 uppercase mb-2">Masa Libur Massal</p>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="flex flex-col">
+                                        <label class="text-[10px] font-bold text-slate-400">MULAI</label>
+                                        <input type="date" id="lib-start" class="w-full p-2 border rounded-lg text-sm">
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <label class="text-[10px] font-bold text-slate-400">BERAKHIR</label>
+                                        <input type="date" id="lib-end" class="w-full p-2 border rounded-lg text-sm">
+                                    </div>
+                                </div>
                             </div>
-                            <p class="text-[10px] text-blue-500 font-bold bg-blue-50 p-2 rounded italic">Info: Status santri otomatis "Libur" tanpa notifikasi.</p>
+                            <div class="bg-slate-50 rounded-xl p-3 max-h-40 overflow-y-auto border border-slate-200 custom-scroll">
+                                <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase text-center">Terinput Baru:</p>
+                                <div id="libur-log-list" class="space-y-2"></div>
+                            </div>
                         </div>
 
-                        <!-- Area Checkin -->
-                        <div id="area-checkin" class="hidden text-center py-4">
-                            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 animate-bounce">
-                                <i class="fas fa-home"></i>
+                        <div id="area-checkin" class="hidden space-y-5">
+                            <div class="text-center py-2">
+                                <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-2">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <p class="text-sm font-bold text-emerald-700">Auto Check-In Aktif</p>
+                                <p class="text-xs text-slate-500">Scan/Input NIS untuk catat kembalinya santri.</p>
                             </div>
-                            <p class="text-sm font-bold text-slate-600">Klik tombol di bawah untuk konfirmasi kembali ke pondok.</p>
+                            <div id="checkin-feedback" class="text-center p-3 rounded-xl hidden text-xs font-bold"></div>
                         </div>
                     </div>
                 </div>
-                
-                <button id="sm-submit" onclick="processSmartAction()" class="w-full py-4 text-white font-black rounded-2xl shadow-xl transition-transform active:scale-95"></button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Santri -->
-    <div id="modal-santri" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/50 p-4">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-md">
-            <h4 class="font-bold mb-4">Data Santri Baru</h4>
+    <!-- Modal Santri (Add/Edit) -->
+    <div id="modal-santri" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl scale-in">
+            <h4 class="font-bold text-xl mb-6 text-slate-800" id="modal-title">Data Santri</h4>
             <form id="form-santri" class="space-y-4">
-                <input type="text" id="s-nama" placeholder="Nama Lengkap" class="w-full p-2 border rounded-lg" required>
-                <input type="text" id="s-nis" placeholder="NIS" class="w-full p-2 border rounded-lg" required>
-                <input type="text" id="s-asrama" placeholder="Asrama" class="w-full p-2 border rounded-lg" required>
-                <button class="w-full py-3 btn-primary rounded-xl font-bold">SIMPAN</button>
+                <input type="hidden" id="edit-id"> 
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2"><label class="text-xs font-bold text-slate-400">Nama Lengkap</label><input type="text" id="s-nama" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    <div><label class="text-xs font-bold text-slate-400">Gender</label><select id="s-gender" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 bg-white"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
+                    <div><label class="text-xs font-bold text-slate-400">Tahun Masuk</label><input type="number" id="s-tahun" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    <div><label class="text-xs font-bold text-slate-400">NIS</label><input type="text" id="s-nis" class="w-full px-4 py-2 border rounded-xl outline-none bg-slate-50 text-slate-500" readonly placeholder="Otomatis"></div>
+                    <div><label class="text-xs font-bold text-slate-400">Asrama</label><input type="text" id="s-asrama" placeholder="Contoh: Al-Fatih" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    <div class="col-span-2"><label class="text-xs font-bold text-slate-400">Nama Wali</label><input type="text" id="s-wali" placeholder="(Opsional)" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    <div class="col-span-2"><label class="text-xs font-bold text-slate-400">Alamat</label><input type="text" id="s-alamat" placeholder="(Opsional)" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    <div class="col-span-2"><label class="text-xs font-bold text-slate-400">No. Telp</label><input type="text" id="s-telp" placeholder="(Opsional)" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="closeModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors">Batal</button>
+                    <button type="submit" class="flex-1 py-3 btn-primary rounded-xl font-bold shadow-lg shadow-emerald-200">SIMPAN</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-8 py-3 rounded-full shadow-2xl opacity-0 transition-all z-[200]"></div>
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-8 py-4 rounded-2xl shadow-2xl opacity-0 transition-all z-[200] font-medium text-sm tracking-wide pointer-events-none"></div>
 
     <script>
-        // Database
-        let db = {
-            santri: [
-                { id: 1, nama: "Ahmad Junaidi", nis: "1001", asrama: "Al-Fatih", status: "Aktif", poin: 0 },
-                { id: 2, nama: "Zainal Arifin", nis: "1002", asrama: "An-Nahl", status: "Aktif", poin: 0 }
-            ],
-            izin: [],
-            pelanggaran: [],
-            users: [{ user: 'admin', pass: '123', role: 'admin' }],
-            settings: { pondok: "Pesantren Madani" }
-        };
+        // --- SERVICE WORKER EMBEDDED (JADI BAGIAN DARI INDEX) ---
+        // Kita masukkan kode SW di sini, lalu daftarkan via Blob
+        const swCode = `
+            const CACHE_NAME = 'esantri-pro-v1';
+            const ASSETS_TO_CACHE = [
+                '/',
+                '/index.html',
+                '/manifest.json',
+                'https://cdn.tailwindcss.com',
+                'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+                'https://cdn.jsdelivr.net/npm/chart.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+                'https://unpkg.com/html5-qrcode/html5-qrcode.min.js',
+                'https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap'
+            ];
 
-        let currentUser = null;
-        let activeIzinType = '';
-        let html5QrCode = null;
+            self.addEventListener('install', (event) => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME).then((cache) => {
+                        return cache.addAll(ASSETS_TO_CACHE);
+                    })
+                );
+                self.skipWaiting();
+            });
 
-        function saveDB() { localStorage.setItem('esantri_pro_v4', JSON.stringify(db)); }
-        function loadDB() {
-            const saved = localStorage.getItem('esantri_pro_v4');
-            if(saved) db = JSON.parse(saved);
+            self.addEventListener('activate', (event) => {
+                const cacheWhitelist = [CACHE_NAME];
+                event.waitUntil(
+                    caches.keys().then((cacheNames) => {
+                        return Promise.all(
+                            cacheNames.map((cacheName) => {
+                                if (!cacheWhitelist.includes(cacheName)) {
+                                    return caches.delete(cacheName);
+                                }
+                            })
+                        );
+                    })
+                );
+            });
+
+            self.addEventListener('fetch', (event) => {
+                if (event.request.url.includes('script.google.com')) {
+                    event.respondWith(fetch(event.request));
+                    return;
+                }
+
+                event.respondWith(
+                    caches.match(event.request).then((response) => {
+                        if (response) { return response; }
+                        return fetch(event.request).then((response) => {
+                            return caches.open(CACHE_NAME).then((cache) => {
+                                cache.put(event.request, response.clone());
+                                return response;
+                            });
+                        });
+                    })
+                );
+            });
+        `;
+
+        // Daftarkan Service Worker menggunakan Blob
+        if ('serviceWorker' in navigator) {
+            const blob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(blob);
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register(swUrl)
+                    .then(reg => console.log('SW Registered', reg))
+                    .catch(err => console.log('SW Failed', err));
+            });
         }
 
-        // Logic Auth
-        document.getElementById('login-form').onsubmit = (e) => {
-            e.preventDefault();
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            const user = db.users.find(x => x.user === u && x.pass === p);
-            if(user) {
-                currentUser = user;
-                sessionStorage.setItem('esantri_session', JSON.stringify(user));
-                document.getElementById('login-page').classList.add('hidden');
+        // --- KONFIGURASI DATABASE ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQRVgXrYFVg0Bc8lk3bcQyJSbD7zk1cy7IsSap7mhDG0QcKMbvVR3UTZXwF5ApwRE/exec";
+
+        // Database & State
+        let db = {
+            santri: [{ id: 1, nama: "Ahmad Fauzan", nis: "1000", asrama: "Al-Fatih", gender: "L", tahunMasuk: 2023, status: "Aktif", wali: "Bapak Hasan", alamat: "Banyuwangi", telp: "081234567890", poin: 0 }, { id: 2, nama: "Siti Aisyah", nis: "1001", asrama: "Aisyah", gender: "P", tahunMasuk: 2022, status: "Bertugas", wali: "Ibu Siti", alamat: "Jember", telp: "082345678901", poin: 5 }],
+            alumni: [], izin: [], pelanggaran: [], users: [{ user: 'admin', pass: '123', role: 'admin' }], settings: { pondok: "Pesantren Madani" },
+            violationSettings: {
+                Ubudiyyah: { poin: 5, jenis: ["Meninggalkan Shalat", "Tidak Berjamaah", "Makan di Sembarang Tempat"] },
+                Keamanan: { poin: 20, jenis: ["Bolos", "Merokok", "Pergi Tanpa Izin"] },
+                Maarif: { poin: 5, jenis: ["Tidak Bawa Kitab", "Mengganggu Kelas", "Tidak Mengerjakan PR"] }
+            }
+        };
+        let currentUser = null, activeIzinType = '', html5QrCode = null, editingId = null, isProcessing = false;
+        let isPendingSync = false;
+
+        async function saveDB() { 
+            localStorage.setItem("esantri-db", JSON.stringify(db)); 
+            if(SCRIPT_URL) {
+                try {
+                    updateSyncUI('syncing');
+                    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(db) });
+                    isPendingSync = false;
+                    updateSyncUI('success');
+                } catch (error) {
+                    isPendingSync = true;
+                    updateSyncUI('pending');
+                }
+            }
+        }
+
+        async function loadDB() {
+            if(SCRIPT_URL) {
+                try {
+                    const response = await fetch(SCRIPT_URL);
+                    const data = await response.json();
+                    if(data && Object.keys(data).length > 0) {
+                        if(data.santri) db.santri = convertSheetDataToObjects(data.santri, db.santri[0]);
+                        if(data.izin) db.izin = convertSheetDataToObjects(data.izin, db.izin[0]);
+                        if(data.pelanggaran) db.pelanggaran = convertSheetDataToObjects(data.pelanggaran, db.pelanggaran[0]);
+                        if(data.users) db.users = convertSheetDataToObjects(data.users, db.users[0]);
+                        if(data.settings) db.settings = convertSheetDataToObjects(data.settings, db.settings);
+                        if(data.violationSettings) db.violationSettings = convertSheetDataToObjects(data.violationSettings, db.violationSettings);
+                        
+                        localStorage.setItem("esantri-db", JSON.stringify(db));
+                        isPendingSync = false;
+                        updateSyncUI('success');
+                        return;
+                    }
+                } catch (error) {
+                    updateSyncUI(isPendingSync ? 'pending' : 'offline');
+                }
+            }
+            const data = localStorage.getItem("esantri-db");
+            if (data) {
+                const old = JSON.parse(data);
+                db.santri = old.santri || []; db.alumni = old.alumni || []; db.izin = old.izin || []; db.pelanggaran = old.pelanggaran || [];
+                db.users = (old.users && old.users.length > 0) ? old.users : db.users;
+                db.settings = old.settings || db.settings;
+                db.violationSettings = old.violationSettings || db.violationSettings;
+            }
+        }
+
+        function convertSheetDataToObjects(sheetData, exampleObject) {
+            if(!sheetData || sheetData.length === 0) return [];
+            if(typeof sheetData[0] === 'object' && !Array.isArray(sheetData[0])) return sheetData;
+            const keys = exampleObject ? Object.keys(exampleObject) : Object.keys(sheetData[0]);
+            return sheetData.map(row => {
+                let obj = {};
+                keys.forEach((key, index) => {
+                    let val = row[index];
+                    if (typeof val === 'string' && (val.startsWith('{') || val.startsWith('['))) {
+                        try { val = JSON.parse(val); } catch(e){}
+                    }
+                    obj[key] = val;
+                });
+                return obj;
+            });
+        }
+
+        function updateSyncUI(status) {
+            const btn = document.getElementById('btn-sync'); const icon = document.getElementById('icon-sync'); const txt = document.getElementById('txt-sync'); const badge = document.getElementById('badge-pending');
+            if(status === 'syncing') {
+                icon.className = "fas fa-sync spin-icon text-emerald-600"; txt.innerText = "Syncing..."; btn.classList.add('cursor-wait'); badge.classList.add('hidden');
+            } else if(status === 'pending') {
+                icon.className = "fas fa-exclamation-triangle text-orange-500"; txt.innerText = "Pending"; btn.classList.remove('cursor-wait'); badge.classList.remove('hidden');
+            } else if(status === 'success') {
+                icon.className = "fas fa-check text-emerald-600"; txt.innerText = "Synced"; btn.classList.remove('cursor-wait'); badge.classList.add('hidden');
+            } else {
+                icon.className = "fas fa-sync text-slate-400"; txt.innerText = "Offline"; btn.classList.remove('cursor-wait'); badge.classList.add('hidden');
+            }
+        }
+
+        async function manualSync() {
+            if(isPendingSync) {
+                showToast("Sinkronisasi data pending...");
+                try {
+                    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(db) });
+                    isPendingSync = false;
+                    updateSyncUI('success');
+                    showToast("Sinkronisasi Berhasil!");
+                } catch(e) { showToast("Gagal terhubung ke server."); }
+            } else {
+                showToast("Mengecek data terbaru...");
+                await loadDB();
                 initApp();
-            } else { showToast("Gagal Login"); }
+                showToast("Data diperbarui");
+            }
+        }
+
+        window.addEventListener('online', () => {
+            if(isPendingSync) { console.log("Back online..."); saveDB(); } else { updateSyncUI('success'); }
+        });
+        window.addEventListener('offline', () => { updateSyncUI('offline'); showToast("Anda sedang offline. Aplikasi tetap bisa digunakan."); });
+
+        // Auth
+        document.getElementById('login-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value, p = document.getElementById('password').value;
+            const user = db.users.find(x => x.user === u && x.pass === p);
+            if(user) { currentUser = user; sessionStorage.setItem('esantri_session', JSON.stringify(user)); document.getElementById('login-page').classList.add('hidden'); await initApp(); } else { showToast("Username atau Password salah!"); }
         };
 
-        function initApp() {
-            loadDB();
+        async function initApp() {
+            await loadDB(); 
             document.getElementById('user-display').innerText = currentUser.user.toUpperCase();
+            document.getElementById('user-initial').innerText = currentUser.user.charAt(0).toUpperCase();
             document.getElementById('admin-nav').style.display = currentUser.role === 'admin' ? 'block' : 'none';
             document.getElementById('pondok-display').innerText = db.settings.pondok;
-            renderSantri();
-            renderIzinLog();
-            renderPelanggaran();
-            renderUsers();
-            initChart();
-            updateDashboard();
-            populateSelects();
+            
+            populateFilterAsrama();
+            renderSantri(); renderIzinLog(); renderPelanggaran(); renderUsers(); renderDashboard(); initChart(); updateDashboard(); 
+            
+            populateFilterPelanggaranAsrama();
+            renderSettings();
+            updatePelanggaranFormOptions();
+            populateSantriDatalist();
+            
+            switchTab('dashboard');
         }
 
         function switchTab(t) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById('tab-'+t).classList.remove('hidden');
+            const target = document.getElementById('tab-'+t); if(target) target.classList.remove('hidden');
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('nav-active'));
-            document.querySelector(`[data-tab="${t}"]`).classList.add('nav-active');
-            document.getElementById('page-title').innerText = t.toUpperCase();
+            const navBtn = document.querySelector(`[data-tab="${t}"]`); if(navBtn) navBtn.classList.add('nav-active');
+            document.getElementById('page-title').innerText = t.charAt(0).toUpperCase() + t.slice(1);
+            if(t === 'dashboard') { renderDashboard(); updateDashboard(); }
         }
 
-        // SMART MODAL LOGIC
+        // --- DASHBOARD ---
+        function renderDashboard() {
+            const izinList = document.getElementById('dash-izin-list'); const onLeave = db.santri.filter(s => s.status !== 'Aktif' && s.status !== 'Alumni');
+            izinList.innerHTML = onLeave.length ? '' : '<p class="text-xs text-center text-slate-400 py-2">Tidak ada santri izin.</p>';
+            onLeave.forEach(s => {
+                const lastIzin = db.izin.filter(i => i.sid === s.id && i.status === 'Pulang').pop();
+                const detail = lastIzin ? lastIzin.detail.split('|')[1].trim() : '-'; 
+                izinList.innerHTML += `<div class="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-orange-50"><div><p class="font-bold text-sm text-slate-700">${s.nama}</p><p class="text-[10px] text-orange-500 font-semibold">Kembali: ${detail.replace('Kembali: ', '')}</p></div><div class="w-2 h-2 rounded-full bg-orange-500"></div></div>`;
+            });
+
+            const lateList = document.getElementById('dash-late-list'); const today = new Date().toISOString().split('T')[0]; const lateStudents = [];
+            db.izin.forEach(i => { if (i.status === 'Pulang' && i.detail.includes('Kembali:')) { const returnDateStr = i.detail.split('Kembali:')[1].trim(); if (returnDateStr < today) { const s = db.santri.find(san => san.id === i.sid); if (s && s.status !== 'Aktif') { lateStudents.push({ ...s, returnDate: returnDateStr }); } } } });
+            lateList.innerHTML = lateStudents.length ? '' : '<p class="text-xs text-center text-slate-400 py-2">Aman, tidak ada santri terlambat.</p>';
+            lateStudents.forEach(s => {
+                lateList.innerHTML += `<div class="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-red-50"><div><p class="font-bold text-sm text-slate-700">${s.nama}</p><p class="text-[10px] text-red-500">Lewat: ${s.returnDate}</p></div><i class="fas fa-exclamation text-red-400"></i></div>`;
+            });
+        }
+        function updateDashboard() {
+            document.getElementById('dash-total').innerText = db.santri.length;
+            document.getElementById('dash-l').innerText = db.santri.filter(s => s.gender === 'L').length;
+            document.getElementById('dash-p').innerText = db.santri.filter(s => s.gender === 'P').length;
+            document.getElementById('dash-poin').innerText = db.santri.reduce((a,b) => a + (b.poin || 0), 0);
+            document.getElementById('dash-user').innerText = db.users.length;
+        }
+
+        // --- PERIZINAN ---
         function openIzinModal(type) {
             activeIzinType = type;
-            const modal = document.getElementById('modal-smart-izin');
-            const header = document.getElementById('smart-header');
-            const submit = document.getElementById('sm-submit');
-            
-            // Reset Views
-            document.getElementById('area-biasa').classList.add('hidden');
-            document.getElementById('area-libur').classList.add('hidden');
-            document.getElementById('area-checkin').classList.add('hidden');
-            document.getElementById('sm-info').classList.add('hidden');
-            document.getElementById('sm-nis').value = '';
+            const modal = document.getElementById('modal-smart-izin'); const header = document.getElementById('smart-header'); const submit = document.getElementById('sm-submit-biasa');
+            document.getElementById('area-biasa').classList.add('hidden'); document.getElementById('area-libur').classList.add('hidden'); document.getElementById('area-checkin').classList.add('hidden');
+            document.getElementById('sm-info').classList.add('hidden'); document.getElementById('sm-nis').value = ''; document.getElementById('checkin-feedback').classList.add('hidden'); document.getElementById('libur-log-list').innerHTML = '';
             
             if(type === 'biasa') {
                 document.getElementById('smart-title').innerText = "IZIN BIASA";
-                header.className = "px-6 py-4 flex justify-between items-center text-white bg-orange-500";
+                header.className = "px-8 py-6 flex justify-between items-center text-white bg-orange-500";
                 document.getElementById('area-biasa').classList.remove('hidden');
-                submit.innerText = "PROSES IZIN";
-                submit.className = "w-full py-4 bg-orange-500 text-white font-black rounded-2xl shadow-lg";
             } else if(type === 'libur') {
                 document.getElementById('smart-title').innerText = "LIBUR PANJANG";
-                header.className = "px-6 py-4 flex justify-between items-center text-white bg-blue-500";
+                header.className = "px-8 py-6 flex justify-between items-center text-white bg-blue-500";
                 document.getElementById('area-libur').classList.remove('hidden');
-                submit.innerText = "PROSES LIBUR";
-                submit.className = "w-full py-4 bg-blue-500 text-white font-black rounded-2xl shadow-lg";
             } else {
                 document.getElementById('smart-title').innerText = "CHECK-IN SANTRI";
-                header.className = "px-6 py-4 flex justify-between items-center text-white bg-emerald-500";
+                header.className = "px-8 py-6 flex justify-between items-center text-white bg-emerald-500";
                 document.getElementById('area-checkin').classList.remove('hidden');
-                submit.innerText = "KONFIRMASI CHECK-IN";
-                submit.className = "w-full py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-lg";
             }
-
             modal.classList.remove('hidden');
         }
 
-        function closeSmartModal() {
-            stopScanner();
-            document.getElementById('modal-smart-izin').classList.add('hidden');
-        }
+        function closeSmartModal() { stopScanner(); document.getElementById('modal-smart-izin').classList.add('hidden'); }
 
-        // Scanner Logic
-        async function toggleScanner() {
+        function toggleScanner() {
             const container = document.getElementById('scanner-container');
             if(container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                html5QrCode = new Html5Qrcode("reader-global");
-                await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-                    document.getElementById('sm-nis').value = txt;
-                    lookupSantri(txt);
-                    stopScanner();
-                });
-            } else {
-                stopScanner();
-            }
+                container.classList.remove('hidden'); document.getElementById('btn-scan-toggle').innerHTML = '<i class="fas fa-stop"></i>';
+                try {
+                    html5QrCode = new Html5Qrcode("reader-global");
+                    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+                        if(!isProcessing) {
+                            isProcessing = true;
+                            document.getElementById('sm-nis').value = txt;
+                            handlePerizinanInput(txt);
+                            setTimeout(() => isProcessing = false, 1500);
+                        }
+                    });
+                } catch (err) { showToast("Kamera error"); stopScanner(); }
+            } else { stopScanner(); }
         }
 
         function stopScanner() {
             if(html5QrCode) {
                 html5QrCode.stop().then(() => {
                     document.getElementById('scanner-container').classList.add('hidden');
+                    document.getElementById('btn-scan-toggle').innerHTML = '<i class="fas fa-camera text-lg"></i>';
                     html5QrCode = null;
-                });
+                }).catch(err => {});
             }
         }
 
-        document.getElementById('sm-nis').oninput = (e) => lookupSantri(e.target.value);
+        document.getElementById('sm-nis').addEventListener('keydown', (e) => { if(e.key === 'Enter') { handlePerizinanInput(e.target.value); } });
+        document.getElementById('sm-nis').oninput = (e) => { if(activeIzinType === 'biasa') lookupSantri(e.target.value); };
+
+        function handlePerizinanInput(nis) {
+            const santri = db.santri.find(s => s.nis === nis);
+            const info = document.getElementById('sm-info');
+            if(!santri) { info.innerText = "NIS tidak ditemukan!"; info.className = "p-4 bg-red-50 text-red-700 rounded-xl text-sm font-semibold block border border-red-100"; return; }
+            if(activeIzinType === 'biasa') {
+                info.innerText = `Santri: ${santri.nama} | ${santri.asrama}`;
+                info.className = "p-4 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-semibold block border border-emerald-100";
+            } else if(activeIzinType === 'libur') {
+                if(santri.status === 'Libur') showToast(`${santri.nama} sudah libur!`); else processLiburAuto(santri);
+            } else if(activeIzinType === 'checkin') {
+                if(santri.status === 'Aktif') showToast(`${santri.nama} sudah aktif di pondok.`); else processCheckInAuto(santri);
+            }
+        }
 
         function lookupSantri(nis) {
             const santri = db.santri.find(s => s.nis === nis);
             const info = document.getElementById('sm-info');
-            if(santri) {
-                info.innerText = `Santri: ${santri.nama} | Kamar: ${santri.asrama} | Status: ${santri.status}`;
-                info.className = "p-3 bg-emerald-50 rounded-xl text-xs font-semibold text-emerald-700 block";
-            } else {
-                info.innerText = "NIS tidak ditemukan";
-                info.className = "p-3 bg-red-50 rounded-xl text-xs font-semibold text-red-700 block";
-            }
+            if(santri) { info.innerText = `Santri: ${santri.nama} | Kamar: ${santri.asrama} | Status: ${santri.status}`; info.className = "p-4 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-semibold block border border-emerald-100"; }
+            else { info.innerText = "NIS tidak ditemukan!"; info.className = "p-4 bg-red-50 text-red-700 rounded-xl text-sm font-semibold block border border-red-100"; }
         }
 
-        function processSmartAction() {
-            const nis = document.getElementById('sm-nis').value;
-            const santri = db.santri.find(s => s.nis === nis);
-
+        document.getElementById('sm-submit-biasa').onclick = async () => {
+            const nis = document.getElementById('sm-nis').value; const santri = db.santri.find(s => s.nis === nis);
             if(!santri) return showToast("Pilih Santri Terlebih Dahulu");
+            santri.status = "Izin";
+            const record = { id: Date.now(), sid: santri.id, nama: santri.nama, tgl: new Date().toLocaleDateString('id-ID'), status: 'Pulang', tipe: "Izin Biasa", detail: `Keluar: ${document.getElementById('sm-tgl-out').value} | Kembali: ${document.getElementById('sm-tgl-in').value}` };
+            db.izin.push(record); await saveDB(); await initApp(); closeSmartModal(); showToast("Izin Biasa dicatat!");
+        };
 
-            const record = {
-                id: Date.now(),
-                sid: santri.id,
-                nama: santri.nama,
-                tgl: new Date().toLocaleDateString('id-ID'),
-                status: activeIzinType === 'checkin' ? 'Kembali' : 'Pulang'
-            };
-
-            if(activeIzinType === 'biasa') {
-                santri.status = "Izin";
-                record.tipe = "Izin Biasa";
-                record.detail = `Keluar: ${document.getElementById('sm-tgl-out').value} | Kembali: ${document.getElementById('sm-tgl-in').value}`;
-            } else if(activeIzinType === 'libur') {
-                santri.status = "Libur";
-                record.tipe = "Libur Panjang";
-                record.detail = `Mulai: ${document.getElementById('lib-start').value} | End: ${document.getElementById('lib-end').value}`;
-            } else {
-                santri.status = "Aktif";
-                record.tipe = "Check-In";
-                record.detail = "Santri kembali ke pondok";
-            }
-
-            db.izin.push(record);
-            saveDB();
-            initApp();
-            closeSmartModal();
-            showToast("Berhasil diproses!");
+        async function processLiburAuto(santri) {
+            const start = document.getElementById('lib-start').value; const end = document.getElementById('lib-end').value;
+            if(!start || !end) return showToast("Isi tanggal masa libur dulu!");
+            santri.status = "Libur";
+            const record = { id: Date.now(), sid: santri.id, nama: santri.nama, tgl: new Date().toLocaleDateString('id-ID'), status: 'Pulang', tipe: "Libur Panjang", detail: `Mulai: ${start} | End: ${end}` };
+            db.izin.push(record); await saveDB();
+            const log = document.getElementById('libur-log-list');
+            log.innerHTML = `<div class="flex justify-between text-xs border-b border-slate-200 pb-1"><span>${santri.nama}</span><span class="text-emerald-600 font-bold">Berhasil</span></div>` + log.innerHTML;
+            document.getElementById('sm-nis').value = ''; showToast(`${santri.nama} Masuk Libur`);
         }
 
-        // Render Utilities (Santri, Pelanggaran, Dashboard)
-        function renderSantri() {
-            const q = document.getElementById('src-santri').value.toLowerCase();
-            const body = document.getElementById('table-santri');
-            body.innerHTML = '';
-            db.santri.filter(s => s.nama.toLowerCase().includes(q) || s.nis.includes(q)).forEach(s => {
-                body.innerHTML += `<tr>
-                    <td class="p-4 font-bold">${s.nama}</td>
-                    <td class="p-4 text-slate-500 font-mono text-xs">${s.nis}</td>
-                    <td class="p-4 text-xs font-semibold">${s.asrama}</td>
-                    <td class="p-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${s.status==='Aktif'?'bg-green-100 text-green-700':'bg-orange-100 text-orange-700'}">${s.status}</span></td>
-                    <td class="p-4 text-right">
-                        ${currentUser.role==='admin'?`<button onclick="delSantri(${s.id})" class="text-red-400"><i class="fas fa-trash"></i></button>`:'-'}
-                    </td>
-                </tr>`;
-            });
+        async function processCheckInAuto(santri) {
+            const activeIzin = db.izin.filter(i => i.sid === santri.id && i.status === 'Pulang').pop();
+            if(!activeIzin) return showToast("Data izin tidak ditemukan.");
+            santri.status = "Aktif";
+            const record = { id: Date.now(), sid: santri.id, nama: santri.nama, tgl: new Date().toLocaleDateString('id-ID'), status: 'Kembali', tipe: activeIzin.tipe, detail: `Santri kembali ke pondok (${activeIzin.tipe})` };
+            db.izin.push(record); await saveDB();
+            const fb = document.getElementById('checkin-feedback');
+            fb.innerHTML = `<span class="text-emerald-700">${santri.nama} Check-In (${activeIzin.tipe}) Berhasil!</span>`;
+            fb.className = "text-center p-3 rounded-xl bg-emerald-50 text-xs font-bold block border border-emerald-100 animate-pulse";
+            document.getElementById('sm-nis').value = '';
         }
 
         function renderIzinLog() {
-            const log = document.getElementById('log-izin');
-            log.innerHTML = '';
+            const log = document.getElementById('log-izin'); log.innerHTML = '';
             [...db.izin].reverse().forEach(i => {
-                log.innerHTML += `<div class="p-4 flex justify-between items-center text-sm">
-                    <div><p class="font-bold">${i.nama} <span class="text-[10px] uppercase text-slate-400 ml-2">${i.tipe}</span></p><p class="text-[10px] text-slate-400">${i.detail}</p></div>
-                    <div class="text-[10px] font-bold ${i.status==='Kembali'?'text-emerald-500':'text-orange-500'}">${i.status.toUpperCase()}</div>
-                </div>`;
+                log.innerHTML += `<div class="p-4 flex justify-between items-center text-sm hover:bg-slate-50"><div><p class="font-bold text-slate-700">${i.nama} <span class="text-[10px] uppercase text-slate-400 ml-2 px-2 py-0.5 bg-slate-100 rounded-full">${i.tipe}</span></p><p class="text-[10px] text-slate-400 mt-1">${i.detail}</p></div><div class="text-[10px] font-bold px-2 py-1 rounded ${i.status==='Kembali'?'bg-emerald-100 text-emerald-600':'bg-orange-100 text-orange-600'}">${i.status.toUpperCase()}</div></div>`;
             });
         }
 
+        // --- PELANGGARAN ---
+        function populateSantriDatalist() {
+            const dl = document.getElementById('list-santri-pel');
+            dl.innerHTML = db.santri.map(s => `<option value="${s.nama} (${s.nis})" data-nis="${s.nis}" data-asrama="${s.asrama}">`).join('');
+        }
+
+        function updatePelanggaranFormOptions() {
+            const kategori = document.getElementById('p-kategori').value;
+            const settings = db.violationSettings[kategori] || { poin: 5 };
+            document.getElementById('p-poin').value = settings.poin;
+        }
+
+        document.getElementById('p-nis-text').addEventListener('change', function() {
+            const val = this.value;
+            const santri = db.santri.find(s => s.nis === val || s.nama.toLowerCase() === val.toLowerCase());
+            if(santri) document.getElementById('p-kamar').value = santri.asrama;
+        });
+
+        function populateFilterPelanggaranAsrama() {
+            const asramas = [...new Set(db.santri.map(s => s.asrama))];
+            const sel = document.getElementById('filter-pel-asrama');
+            sel.innerHTML = '<option value="">Semua Kamar</option>' + asramas.map(a => `<option value="${a}">${a}</option>`).join('');
+        }
+
         function renderPelanggaran() {
+            const fKat = document.getElementById('filter-pel-kategori').value;
+            const fKamar = document.getElementById('filter-pel-asrama').value;
+            const qNama = document.getElementById('filter-pel-nama').value.toLowerCase();
+            
             const body = document.getElementById('table-pelanggaran'); body.innerHTML = '';
-            db.pelanggaran.forEach(p => {
-                body.innerHTML += `<tr><td class="p-3 font-bold">${p.nama}</td><td class="p-3">${p.tipe}</td><td class="p-3 font-black text-red-600">${p.poin}</td><td class="p-3 text-[10px]">${p.tgl}</td></tr>`;
+
+            let filtered = db.pelanggaran.filter(p => {
+                const s = db.santri.find(x => x.id == p.sid);
+                const matchKat = fKat === "" || p.kategori === fKat;
+                const matchKamar = fKamar === "" || (s && s.asrama === fKamar) || p.kamar === fKamar;
+                const matchNama = qNama === "" || (s && s.nama.toLowerCase().includes(qNama)) || (p.nama && p.nama.toLowerCase().includes(qNama));
+                return matchKat && matchKamar && matchNama;
             });
+
+            const totalPoin = filtered.reduce((acc, curr) => acc + (curr.poin || 0), 0);
+            document.getElementById('recap-poin').innerText = totalPoin;
+
+            filtered.forEach(p => {
+                body.innerHTML += `<tr class="hover:bg-red-50"><td class="p-4 font-bold text-slate-700">${p.nama}</td><td class="p-4 text-xs font-bold text-slate-600">${p.kamar}</td><td class="p-4 text-xs font-bold uppercase text-slate-500">${p.kategori}</td><td class="p-4 font-black text-red-600">${p.poin}</td><td class="p-4 text-[10px] text-slate-400">${p.tgl}</td></tr>`;
+            });
+        }
+
+        async function submitPelanggaran() {
+            const inputVal = document.getElementById('p-nis-text').value;
+            const santri = db.santri.find(s => s.nis === inputVal || s.nama.toLowerCase() === inputVal.toLowerCase());
+            
+            if(!santri) return showToast("Santri tidak ditemukan!");
+
+            const kategori = document.getElementById('p-kategori').value;
+            const poin = Number(document.getElementById('p-poin').value);
+            const ket = document.getElementById('p-ket').value;
+            const kamar = document.getElementById('p-kamar').value;
+
+            santri.poin = (santri.poin || 0) + poin;
+            db.pelanggaran.push({ 
+                id: Date.now(), 
+                sid: santri.id, 
+                nama: santri.nama, 
+                kategori: kategori,
+                kamar: kamar, 
+                poin: poin, 
+                ket: ket, 
+                tgl: new Date().toLocaleDateString('id-ID') 
+            });
+            
+            await saveDB(); await initApp(); showToast("Pelanggaran tercatat");
+            document.getElementById('form-pelanggaran').reset();
+            updatePelanggaranFormOptions();
+        }
+
+        // --- SANTRI FUNCTIONS ---
+        function populateFilterAsrama() { const asramas = [...new Set(db.santri.map(s => s.asrama))]; const sel = document.getElementById('filter-asrama'); sel.innerHTML = '<option value="">Semua Asrama</option>' + asramas.map(a => `<option value="${a}">${a}</option>`).join(''); }
+        function renderSantri() {
+            const q = document.getElementById('src-santri').value.toLowerCase(); const fGender = document.getElementById('filter-gender').value; const fAsrama = document.getElementById('filter-asrama').value; const fTahun = document.getElementById('filter-tahun').value;
+            const body = document.getElementById('table-santri'); body.innerHTML = '';
+            let filtered = db.santri.filter(s => (s.nama.toLowerCase().includes(q) || s.nis.includes(q)) && s.gender === fGender && (fAsrama === "" || s.asrama === fAsrama) && (fTahun === "" || s.tahunMasuk == fTahun));
+            document.getElementById('count-santri').innerText = filtered.length;
+            filtered.forEach(s => {
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="p-4"><input type="checkbox" class="chk-santri" value="${s.id}"></td><td class="p-4"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">${s.nama.charAt(0)}</div><div><div><p class="font-bold text-slate-700 flex items-center gap-2">${s.nama} <button onclick="editSantri(${s.id})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt text-xs"></i></button></p><p class="text-xs text-slate-400 font-mono">${s.nis}</p></div></div></td><td class="p-4 text-xs font-semibold text-slate-600">${s.asrama}</td><td class="p-4 text-xs text-slate-500">${s.tahunMasuk}</td><td class="p-4"><span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase ${s.status==='Aktif'?'bg-emerald-100 text-emerald-700':'bg-orange-100 text-orange-700'}">${s.status}</span></td><td class="p-4 text-right">${currentUser.role==='admin'?`<button onclick="delSantri(${s.id})" class="text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button>`:'-'}</td></tr>`;
+            });
+        }
+        function openModal(id) {
+            editingId = null; document.getElementById('modal-title').innerText = "Tambah Santri Baru"; document.getElementById('form-santri').reset();
+            const currentYear = new Date().getFullYear(); document.getElementById('s-tahun').value = currentYear;
+            const nextNis = db.santri.length ? Math.max(...db.santri.map(s => Number(s.nis))) + 1 : 1000; document.getElementById('s-nis').value = nextNis; document.getElementById(id).classList.remove('hidden');
+        }
+        function editSantri(id) {
+            const s = db.santri.find(x => x.id === id); if(!s) return; editingId = id; document.getElementById('modal-title').innerText = "Edit Data Santri";
+            document.getElementById('s-nama').value = s.nama; document.getElementById('s-nis').value = s.nis; document.getElementById('s-gender').value = s.gender; document.getElementById('s-tahun').value = s.tahunMasuk; document.getElementById('s-asrama').value = s.asrama; document.getElementById('s-wali').value = s.wali || ''; document.getElementById('s-alamat').value = s.alamat || ''; document.getElementById('s-telp').value = s.telp || ''; openModal('modal-santri');
+        }
+        document.getElementById('form-santri').onsubmit = async function (e) {
+            e.preventDefault(); const nama = document.getElementById("s-nama").value.trim(); const asrama = document.getElementById("s-asrama").value.trim(); const gender = document.getElementById("s-gender").value; const tahunMasuk = Number(document.getElementById("s-tahun").value); const wali = document.getElementById("s-wali").value.trim(); const alamat = document.getElementById("s-alamat").value.trim(); const telp = document.getElementById("s-telp").value.trim();
+            if (!nama || !asrama || !gender || !tahunMasuk) return showToast("Data wajib belum diisi lengkap");
+            if (editingId) { const idx = db.santri.findIndex(s => s.id === editingId); if (idx !== -1) { db.santri[idx] = { ...db.santri[idx], nama, asrama, gender, tahunMasuk, wali, alamat, telp }; showToast("Data diperbarui"); } } else {
+                let nis = document.getElementById("s-nis").value; if(!nis) { nis = db.santri.length ? Math.max(...db.santri.map(s => Number(s.nis))) + 1 : 1000; }
+                db.santri.push({ id: Date.now(), nama, nis: String(nis), asrama, gender, tahunMasuk, status: "Aktif", wali, alamat, telp, poin: 0 }); showToast("Santri ditambahkan");
+            } await saveDB(); closeModal(); await initApp();
+        };
+        async function applyBulkStatus() {
+            const action = document.getElementById('bulk-status').value; if (!action) return alert('Pilih aksi dulu');
+            const checked = [...document.querySelectorAll('.chk-santri:checked')].map(cb => Number(cb.value)); if (!checked.length) return alert('Tidak ada santri dipilih');
+            if (action === 'export') { exportFilteredCSV(checked); } else if (action === 'Alumni') {
+                checked.forEach(id => { const s = db.santri.find(x => x.id === id); if (!s) return; db.alumni.push({...s, tahunKeluar: new Date().getFullYear()}); db.santri = db.santri.filter(x => x.id !== id); }); await saveDB(); await initApp(); showToast(`Santri diarsipkan ke Alumni`);
+            } else { db.santri.forEach(s => { if (checked.includes(s.id)) s.status = action; }); await saveDB(); await initApp(); showToast(`Status diubah menjadi ${action}`); }
+        }
+        function exportFilteredCSV(ids) {
+            const selected = db.santri.filter(s => ids.includes(s.id)); let csv = "Nama;NIS;Gender;Asrama;Tahun;Status;Wali;Alamat;Telp\n";
+            selected.forEach(s => { csv += `${s.nama};${s.nis};${s.gender};${s.asrama};${s.tahunMasuk};${s.status};${s.wali||'-'};${s.alamat||'-'};${s.telp||'-'}\n`; });
+            downloadCSV(csv, 'santri_filtered.csv');
+        }
+
+        async function importCSV() {
+            const fileInput = document.getElementById('import-file'); const file = fileInput.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    if(jsonData.length === 0) return showToast("File kosong!");
+                    let startRow = 0;
+                    if (jsonData.length > 0 && typeof jsonData[0][0] === 'string') {
+                        const firstCell = jsonData[0][0].toLowerCase();
+                        if(firstCell.includes('nama') || firstCell.includes('no')) startRow = 1;
+                    }
+                    let count = 0;
+                    for (let i = startRow; i < jsonData.length; i++) {
+                        const row = jsonData[i]; if (!row || row.length < 2) continue;
+                        const nama = row[0]; const genderRaw = row[1]; const tahunRaw = row[2]; const asrama = row[3];
+                        const wali = row[4] || ""; const alamat = row[5] || "";
+                        if (nama && asrama) {
+                            let gender = 'L'; if (genderRaw) { const g = String(genderRaw).toUpperCase(); if (g === 'P' || g === 'PEREMPUAN' || g === 'F') gender = 'P'; }
+                            let tahunMasuk = new Date().getFullYear(); if (tahunRaw) { const t = parseInt(tahunRaw); if (!isNaN(t)) tahunMasuk = t; }
+                            const nextNis = db.santri.length ? Math.max(...db.santri.map(s => Number(s.nis))) + 1 : 1000;
+                            db.santri.push({ id: Date.now() + i, nama: nama, nis: String(nextNis), gender: gender, tahunMasuk: tahunMasuk, asrama: asrama, status: "Aktif", wali: wali, alamat: alamat, telp: "", poin: 0 }); count++;
+                        }
+                    }
+                    await saveDB(); await initApp(); showToast(`${count} Data Berhasil Diimpor dari Excel!`); fileInput.value = '';
+                } catch (error) { console.error(error); showToast("Gagal membaca file. Pastikan format Excel benar."); }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a"); if (link.download !== undefined) { const url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", filename); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
+        }
+
+        // --- PENGATURAN & USERS ---
+        function renderSettings() {
+            document.getElementById('set-pondok').value = db.settings.pondok || '';
+            document.getElementById('set-poin-ubudiyyah').value = db.violationSettings.Ubudiyyah.poin;
+            document.getElementById('set-poin-keamanan').value = db.violationSettings.Keamanan.poin;
+            document.getElementById('set-poin-maarif').value = db.violationSettings.Maarif.poin;
+        }
+
+        async function saveSettings() {
+            db.settings.pondok = document.getElementById('set-pondok').value;
+            db.violationSettings.Ubudiyyah.poin = Number(document.getElementById('set-poin-ubudiyyah').value);
+            db.violationSettings.Keamanan.poin = Number(document.getElementById('set-poin-keamanan').value);
+            db.violationSettings.Maarif.poin = Number(document.getElementById('set-poin-maarif').value);
+            await saveDB(); await initApp(); showToast("Pengaturan Tersimpan!");
         }
 
         function renderUsers() {
             const list = document.getElementById('list-user'); list.innerHTML = '';
-            db.users.forEach(u => {
-                list.innerHTML += `<div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg text-xs font-bold">
-                    <span>${u.user} (${u.role})</span>
-                    ${u.user!=='admin'?`<button onclick="delUser('${u.user}')" class="text-red-500">&times;</button>`:''}
-                </div>`;
-            });
+            db.users.forEach(u => { list.innerHTML += `<div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl text-sm font-bold border border-slate-100"><span class="text-slate-600">${u.user} <span class="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded ml-1">${u.role}</span></span>${u.user!=='admin'?`<button onclick="delUser('${u.user}')" class="text-red-400 hover:text-red-600">&times;</button>`:''}</div>`; });
         }
-
-        function populateSelects() {
-            document.getElementById('p-sid').innerHTML = '<option value="">Pilih Santri...</option>' + db.santri.map(s => `<option value="${s.id}">${s.nama} (${s.nis})</option>`).join('');
-        }
-
-        function updateDashboard() {
-            document.getElementById('dash-total').innerText = db.santri.length;
-            document.getElementById('dash-izin').innerText = db.santri.filter(s => s.status !== 'Aktif').length;
-            document.getElementById('dash-poin').innerText = db.santri.reduce((a,b) => a + b.poin, 0);
-            document.getElementById('dash-user').innerText = db.users.length;
-        }
-
-        function showToast(m) {
-            const t = document.getElementById('toast'); t.innerText = m;
-            t.classList.remove('opacity-0', 'translate-y-2'); t.classList.add('opacity-100', '-translate-y-2');
-            setTimeout(() => { t.classList.remove('opacity-100', '-translate-y-2'); t.classList.add('opacity-0', 'translate-y-2'); }, 2000);
-        }
-
-        // Form Submits
-        document.getElementById('form-santri').onsubmit = (e) => {
-            e.preventDefault();
-            db.santri.push({ id: Date.now(), nama: document.getElementById('s-nama').value, nis: document.getElementById('s-nis').value, asrama: document.getElementById('s-asrama').value, status: 'Aktif', poin: 0 });
-            saveDB(); initApp(); document.getElementById('modal-santri').classList.add('hidden'); e.target.reset();
-        };
-
-        document.getElementById('form-pelanggaran').onsubmit = (e) => {
-            e.preventDefault();
-            const sid = parseInt(document.getElementById('p-sid').value);
-            const santri = db.santri.find(s => s.id === sid);
-            const pMap = { "Ringan": 5, "Sedang": 25, "Berat": 100 };
-            const p = { sid, nama: santri.nama, tipe: document.getElementById('p-tipe').value, poin: pMap[document.getElementById('p-tipe').value], ket: document.getElementById('p-ket').value, tgl: new Date().toLocaleDateString('id-ID') };
-            db.pelanggaran.push(p); santri.poin += p.poin;
-            saveDB(); initApp(); e.target.reset();
-        };
-
-        document.getElementById('form-user').onsubmit = (e) => {
-            e.preventDefault();
-            db.users.push({ user: document.getElementById('u-name').value, pass: document.getElementById('u-pass').value, role: 'pengurus' });
-            saveDB(); initApp(); e.target.reset();
-        };
-
-        function delUser(u) { db.users = db.users.filter(x => x.user !== u); saveDB(); initApp(); }
-        function delSantri(id) { if(confirm("Hapus?")) { db.santri = db.santri.filter(s => s.id !== id); saveDB(); initApp(); } }
-        function saveSettings() { db.settings.pondok = document.getElementById('set-pondok').value; saveDB(); initApp(); showToast("Tersimpan!"); }
+        function populateSelects() { document.getElementById('p-sid').innerHTML = '<option value="">Pilih Santri...</option>' + db.santri.map(s => `<option value="${s.id}">${s.nama} (${s.nis})</option>`).join(''); }
+        async function addUser() { const u = document.getElementById('u-name').value; const p = document.getElementById('u-pass').value; if(u && p) { db.users.push({ user: u, pass: p, role: 'admin' }); await saveDB(); renderUsers(); document.getElementById('u-name').value=''; document.getElementById('u-pass').value=''; showToast("User ditambahkan"); } }
+        async function delUser(u) { if(confirm("Hapus?")) { db.users = db.users.filter(x => x.user !== u); await saveDB(); renderUsers(); } }
+        async function delSantri(id) { if(confirm("Hapus?")) { db.santri = db.santri.filter(s => s.id !== id); await saveDB(); await initApp(); } }
+        function toggleAllSantri(source) { document.querySelectorAll('.chk-santri').forEach(cb => cb.checked = source.checked); }
         function logout() { sessionStorage.removeItem('esantri_session'); location.reload(); }
-
-        let chart = null;
-        function initChart() {
-            const ctx = document.getElementById('kamarChart').getContext('2d');
-            const kamars = {}; db.santri.forEach(s => kamars[s.asrama] = (kamars[s.asrama] || 0) + s.poin);
+        function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('opacity-0', 'translate-y-4'); t.classList.add('opacity-100', '-translate-y-4'); setTimeout(() => { t.classList.remove('opacity-100', '-translate-y-4'); t.classList.add('opacity-0', 'translate-y-4'); }, 3000); }
+        function closeModal() { document.getElementById('modal-santri').classList.add('hidden'); }
+        
+        let chart = null; function initChart() {
+            const ctx = document.getElementById('kamarChart').getContext('2d'); const kamars = {}; db.santri.forEach(s => kamars[s.asrama] = (kamars[s.asrama] || 0) + s.poin);
             if(chart) chart.destroy();
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: Object.keys(kamars), datasets: [{ label: 'Akumulasi Poin Per Kamar', data: Object.values(kamars), backgroundColor: '#ef4444', borderRadius: 10 }] },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+            chart = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(kamars), datasets: [{ label: 'Total Poin', data: Object.values(kamars), backgroundColor: '#ef4444', borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
         }
-
         function exportData(type) {
-            let csv = type === 'izin' ? 'Nama,Tipe,Detail,Status,Tanggal\n' : 'Nama,Tipe,Poin,Tanggal\n';
-            const data = type === 'izin' ? db.izin : db.pelanggaran;
-            data.forEach(d => {
-                csv += type === 'izin' ? `${d.nama},${d.tipe},${d.detail},${d.status},${d.tgl}\n` : `${d.nama},${d.tipe},${d.poin},${d.tgl}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `rekap_${type}.csv`; a.click();
-        }
+            if(type === 'pelanggaran') {
+                const fKat = document.getElementById('filter-pel-kategori').value;
+                const fKamar = document.getElementById('filter-pel-asrama').value;
+                const qNama = document.getElementById('filter-pel-nama').value.toLowerCase();
+                
+                let filtered = db.pelanggaran.filter(p => {
+                    const s = db.santri.find(x => x.id == p.sid);
+                    const matchKat = fKat === "" || p.kategori === fKat;
+                    const matchKamar = fKamar === "" || (s && s.asrama === fKamar) || p.kamar === fKamar;
+                    const matchNama = qNama === "" || (s && s.nama.toLowerCase().includes(qNama)) || (p.nama && p.nama.toLowerCase().includes(qNama));
+                    return matchKat && matchKamar && matchNama;
+                });
 
-        window.onload = () => {
-            const session = sessionStorage.getItem('esantri_session');
-            if(session) {
-                currentUser = JSON.parse(session);
-                document.getElementById('login-page').classList.add('hidden');
-                initApp();
+                if(filtered.length === 0) return showToast("Tidak ada data untuk di-export");
+                let csv = "Nama,Kamar,Kategori,Poin,Tanggal\n";
+                filtered.forEach(d => { csv += `${d.nama},${d.kamar},${d.kategori},${d.poin},${d.tgl}\n`; });
+                downloadCSV(csv, `rekap_pelanggaran_filter_${Date.now()}.csv`);
+                return;
             }
-        };
 
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+            if(type === 'izin') { let csv = 'Nama,Tipe,Detail,Status,Tanggal\n'; const data = db.izin; if(data.length === 0) return showToast("Tidak ada data"); data.forEach(d => { csv += `${d.nama},${d.tipe},${d.detail},${d.status},${d.tgl}\n`; }); downloadCSV(csv, `rekap_${type}.csv`); }
+        }
+        window.onload = async () => { const session = sessionStorage.getItem('esantri_session'); if(session) { currentUser = JSON.parse(session); document.getElementById('login-page').classList.add('hidden'); await initApp(); } };
     </script>
 </body>
 </html>
